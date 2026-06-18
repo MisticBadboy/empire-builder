@@ -1,16 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { COLORS, FONTS } from '../constants/theme';
+import { COLORS } from '../constants/theme';
 import { formatMoney } from '../utils/formatters';
 
 interface MoneyCounterProps {
   amount: number;
-  size?: 'sm' | 'md' | 'lg' | 'hero';
+  size?: number;
   color?: string;
-  showLabel?: boolean;
+  showLabel?: string;
 }
 
-export default function MoneyCounter({ amount, size = 'lg', color = COLORS.primary, showLabel = false }: MoneyCounterProps) {
+export default function MoneyCounter({ amount, size = 28, color = COLORS.primary, showLabel }: MoneyCounterProps) {
   const [displayAmount, setDisplayAmount] = useState(amount);
   const prevAmount = useRef(amount);
   const animFrame = useRef<number | null>(null);
@@ -44,12 +44,10 @@ export default function MoneyCounter({ amount, size = 'lg', color = COLORS.prima
     };
   }, [amount]);
 
-  const fontSize = size === 'hero' ? FONTS.hero : size === 'lg' ? FONTS.xxl : size === 'md' ? FONTS.xl : FONTS.large;
-
   return (
     <View style={styles.container}>
-      {showLabel && <Text style={[styles.label, { fontSize: fontSize * 0.5 }]}>NET WORTH</Text>}
-      <Text style={[styles.amount, { fontSize, color }]} numberOfLines={1} adjustsFontSizeToFit>
+      {showLabel && <Text style={styles.label}>{showLabel}</Text>}
+      <Text style={[styles.amount, { fontSize: size, color }]} numberOfLines={1} adjustsFontSizeToFit>
         {formatMoney(displayAmount)}
       </Text>
     </View>
@@ -62,9 +60,11 @@ const styles = StyleSheet.create({
   },
   label: {
     color: COLORS.textMuted,
+    fontSize: 11,
     fontWeight: '600',
     letterSpacing: 2,
-    marginBottom: 4,
+    marginBottom: 2,
+    textTransform: 'uppercase',
   },
   amount: {
     fontWeight: '800',

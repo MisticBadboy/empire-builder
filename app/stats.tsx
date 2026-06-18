@@ -30,18 +30,20 @@ export default function StatsScreen() {
   const netWorth = getNetWorth();
   const incomePerSec = getIncomePerSec();
   const ownedCount = Object.keys(businesses).length;
-  const maxedCount = Object.values(businesses).filter((b) => b.level >= 100).length;
-  const totalInvested = Object.values(businesses).reduce((sum, b) => sum + b.totalInvested, 0);
+  const totalLevels = Object.values(businesses).reduce((sum, b) => sum + b.level, 0);
 
-  let bestBusiness = '';
+  // Find most profitable business
   let bestIncome = 0;
+  let bestBusiness = 'None';
   for (const [id, owned] of Object.entries(businesses)) {
-    const def = BUSINESS_DEFS.find((d) => d.id === id);
-    if (def && owned.level > 0) {
-      const income = def.baseIncome * (1 + owned.level * 0.1);
-      if (income > bestIncome) {
-        bestIncome = income;
-        bestBusiness = def.name;
+    if (owned.level > 0) {
+      const def = BUSINESS_DEFS.find((d) => d.id === id);
+      if (def) {
+        const income = def.baseIncome * owned.level * 0.1;
+        if (income > bestIncome) {
+          bestIncome = income;
+          bestBusiness = def.name;
+        }
       }
     }
   }
@@ -59,6 +61,7 @@ export default function StatsScreen() {
             try {
               await AsyncStorage.removeItem('@empire_builder_save');
             } catch {}
+            // Reload the app state
             loadGame();
           },
         },
@@ -71,56 +74,46 @@ export default function StatsScreen() {
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <Text style={styles.title}>📊 STATS</Text>
 
+        {/* Net Worth */}
         <View style={styles.netWorthCard}>
-          <Text style={styles.nwLabel}>TOTAL NET WORTH</Text>
-          <Text style={styles.nwValue}>{formatMoney(netWorth)}</Text>
-          <Text style={styles.nwIncome}>{formatIncome(incomePerSec)}</Text>
-        </View>
-
-        <View style={styles.grid}>
-          <StatBox label="Cash on Hand" value={formatMoney(cash)} icon="💵" />
-          <StatBox label="Total Earned" value={formatMoney(totalEarned)} icon="📈" />
-          <StatBox label="Total Invested" value={formatMoney(totalInvested)} icon="🏦" />
-          <StatBox label="Businesses" value={`${ownedCount}/${BUSINESS_DEFS.length}`} icon="🏢" />
-          <StatBox label="Maxed Out" value={`${maxedCount}`} icon="⬆️" />
-          <StatBox label="Total Upgrades" value={`${totalPurchases}`} icon="🛒" />
-          <StatBox label="Rank" value={TIERS[highestTier - 1]?.name ?? 'Unknown'} icon="👑" />
-          <StatBox label="Best Earner" value={bestBusiness || 'None'} icon="⭐" sub={bestIncome > 0 ? formatIncome(bestIncome) : undefined} />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            🏆 Achievements ({achievements.length}/{ACHIEVEMENT_DEFS.length})
+          <Text style={styles.netWorthLabel}>NET WORTH</Text>
+          <Text style={styles.netWorthValue}>{formatMoney(netWorth)}</Text>
+          <Text style={[styles.tierLabel, { color: TIERS[highestTier - 1]?.color }]}>
+            {TIERS[highestTier - 1]?.name}
           </Text>
-          <View style={styles.achieveGrid}>
-            {ACHIEVEMENT_DEFS.map((ach) => {
-              const unlocked = achievements.includes(ach.id);
-              return (
-                <View
-                  key={ach.id}
-                  style={[styles.achieveCard, unlocked && styles.achieveCardUnlocked]}
-                >
-                  <Text style={[styles.achieveIcon, !unlocked && { opacity: 0.3 }]}>
-                    {unlocked ? ach.icon : '🔒'}
-                  </Text>
-                  <Text
-                    style={[styles.achieveName, !unlocked && { color: COLORS.textDim }]}
-                    numberOfLines={1}
-                  >
-                    {ach.name}
-                  </Text>
-                  <Text
-                    style={[styles.achieveDesc, !unlocked && { color: COLORS.textDim }]}
-                    numberOfLines={1}
-                  >
-                    {ach.description}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
         </View>
 
+        {/* Stats Grid */}
+        <View style={styles.grid}>
+          <StatBox label="Cash" value={formatMoney(cash)} />
+          <StatBox label="Income/s" value={formatIncome(incomePerSec)} />
+          <StatBox label="Total Earned" value={formatMoney(totalEarned)} />
+          <StatBox label="Businesses" value={`${ownedCount}/${BUSINESS_DEFS.length}`} />
+          <StatBox label="Total Upgrades" value={totalLevels.toString()} />
+          <StatBox label="Purchases" value={totalPurchases.toString()} />
+          <StatBox label="Best Income" value={bestBusiness} />
+          <StatBox label="Best Income/s" value={formatMoney(bestIncome)} />
+        </View>
+
+        {/* Achievements */}
+        <Text style={styles.sectionTitle}>🏆 Achievements ({achievements.length}/{ACHIEVEMENT_DEFS.length})</Text>
+        {ACHIEVEMENT_DEFS.map((ach) => {
+          const unlocked = achievements.includes(ach.id);
+          return (
+            <View key={ach.id} style={[styles.achieveCard, !unlocked && styles.achieveLocked]}>
+              <Text style={styles.achieveIcon}>{unlocked ? ach.icon : '🔒'}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.achieveName, !unlocked && styles.achieveNameLocked]}>
+                  {ach.name}
+                </Text>
+                <Text style={styles.achieveDesc}>{ach.description}</Text>
+              </View>
+              {unlocked && <Text style={styles.achieveCheck}>✅</Text>}
+            </View>
+          );
+        })}
+
+        {/* Reset */}
         <Pressable style={styles.resetButton} onPress={handleReset}>
           <Text style={styles.resetText}>🗑️ Reset Game</Text>
         </Pressable>
@@ -131,13 +124,11 @@ export default function StatsScreen() {
   );
 }
 
-function StatBox({ label, value, icon, sub }: { label: string; value: string; icon: string; sub?: string }) {
+function StatBox({ label, value }: { label: string; value: string }) {
   return (
-    <View style={styles.statCard}>
-      <Text style={styles.statIcon}>{icon}</Text>
+    <View style={styles.statBox}>
       <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue} numberOfLines={1}>{value}</Text>
-      {sub && <Text style={styles.statSub}>{sub}</Text>}
+      <Text style={styles.statValue}>{value}</Text>
     </View>
   );
 }
@@ -159,112 +150,106 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '900',
     letterSpacing: 2,
-    textAlign: 'center',
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.md,
   },
+  // Net Worth Card
   netWorthCard: {
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.xl,
+    borderRadius: RADIUS.lg,
     padding: SPACING.xl,
     alignItems: 'center',
+    marginBottom: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.primary + '30',
-    marginBottom: SPACING.lg,
+    borderColor: COLORS.primary + '40',
   },
-  nwLabel: {
+  netWorthLabel: {
     color: COLORS.textMuted,
     fontSize: 11,
     fontWeight: '600',
-    letterSpacing: 2,
+    letterSpacing: 3,
     marginBottom: 4,
   },
-  nwValue: {
+  netWorthValue: {
     color: COLORS.primary,
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '900',
     fontVariant: ['tabular-nums'],
+    marginBottom: 4,
   },
-  nwIncome: {
-    color: COLORS.success,
-    fontSize: 16,
+  tierLabel: {
+    fontSize: 14,
     fontWeight: '700',
-    marginTop: 4,
   },
+  // Stats Grid
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: SPACING.sm,
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.md,
   },
-  statCard: {
+  statBox: {
+    width: '48%',
+    flexGrow: 1,
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.md,
     padding: SPACING.md,
-    width: '48%',
     borderWidth: 1,
     borderColor: COLORS.border,
-  },
-  statIcon: {
-    fontSize: 20,
-    marginBottom: 4,
   },
   statLabel: {
     color: COLORS.textMuted,
     fontSize: 10,
-    fontWeight: '500',
-    marginBottom: 2,
+    fontWeight: '600',
+    letterSpacing: 1,
+    marginBottom: 4,
   },
   statValue: {
     color: COLORS.text,
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
   },
-  statSub: {
-    color: COLORS.success,
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  section: {
-    marginBottom: SPACING.lg,
-  },
+  // Achievements
   sectionTitle: {
     color: COLORS.text,
     fontSize: 16,
-    fontWeight: '800',
-    marginBottom: SPACING.md,
-  },
-  achieveGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SPACING.sm,
+    fontWeight: '700',
+    marginBottom: SPACING.sm,
   },
   achieveCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.md,
     padding: SPACING.md,
-    width: '48%',
+    marginBottom: SPACING.sm,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  achieveCardUnlocked: {
-    borderColor: COLORS.primary + '40',
-    backgroundColor: COLORS.primary + '08',
+  achieveLocked: {
+    opacity: 0.5,
   },
   achieveIcon: {
     fontSize: 24,
-    marginBottom: 4,
+    marginRight: SPACING.md,
   },
   achieveName: {
     color: COLORS.text,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
+  },
+  achieveNameLocked: {
+    color: COLORS.textMuted,
   },
   achieveDesc: {
     color: COLORS.textMuted,
-    fontSize: 10,
+    fontSize: 11,
     marginTop: 2,
   },
+  achieveCheck: {
+    fontSize: 16,
+  },
+  // Reset
   resetButton: {
     backgroundColor: COLORS.danger + '20',
     borderRadius: RADIUS.md,

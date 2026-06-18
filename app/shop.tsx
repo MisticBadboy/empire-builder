@@ -8,7 +8,7 @@ import {
   Pressable,
 } from 'react-native';
 import { useGameStore } from '../store/useGameStore';
-import { BUSINESS_DEFS, BUSINESS_DEFS as ALL_BUSINESSES, BusinessCategory, CATEGORY_LABELS } from '../store/businessDefs';
+import { BUSINESS_DEFS, BusinessCategory, CATEGORY_LABELS } from '../store/businessDefs';
 import { COLORS, SPACING, RADIUS } from '../constants/theme';
 import { TIERS } from '../constants/tiers';
 import { formatMoney } from '../utils/formatters';
@@ -17,7 +17,15 @@ import BusinessCard from '../components/BusinessCard';
 
 const TIER_FILTERS: { key: number | 'all'; label: string }[] = [
   { key: 'all', label: '🌟 All' },
-  ...TIERS.map((t) => ({ key: t.id, label: `Tier ${t.id}` })),
+  ...TIERS.map((t) => ({ key: t.id, label: `Tier ${t.id} ${t.name}` })),
+];
+
+const CATEGORY_FILTERS: { key: BusinessCategory | 'all'; label: string }[] = [
+  { key: 'all', label: '🌟 All' },
+  ...Object.entries(CATEGORY_LABELS).map(([key, label]) => ({
+    key: key as BusinessCategory,
+    label,
+  })),
 ];
 
 export default function ShopScreen() {
@@ -29,16 +37,14 @@ export default function ShopScreen() {
   const [selectedTier, setSelectedTier] = useState<number | 'all'>('all');
   const [selectedCategory, setSelectedCategory] = useState<BusinessCategory | 'all'>('all');
 
-  const filteredBusinesses = ALL_BUSINESSES.filter((b) => {
-    // Tier filter
+  const filteredBusinesses = BUSINESS_DEFS.filter((b) => {
     if (selectedTier !== 'all' && b.tier !== selectedTier) return false;
-    // Category filter
     if (selectedCategory !== 'all' && b.category !== selectedCategory) return false;
     return true;
   });
 
   // Group by tier
-  const groupedByTier: Record<number, typeof ALL_BUSINESSES> = {};
+  const groupedByTier: Record<number, typeof BUSINESS_DEFS> = {};
   for (const b of filteredBusinesses) {
     if (!groupedByTier[b.tier]) groupedByTier[b.tier] = [];
     groupedByTier[b.tier].push(b);
@@ -46,11 +52,7 @@ export default function ShopScreen() {
 
   const handlePurchase = (businessId: string) => {
     const success = buyBusiness(businessId);
-    if (success) {
-      hapticMedium();
-    } else {
-      hapticLight();
-    }
+    if (!success) hapticLight();
   };
 
   return (
@@ -62,63 +64,70 @@ export default function ShopScreen() {
         </View>
       </View>
 
-      {/* Tier Filter */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filterRow}
-      >
-        {TIER_FILTERS.map((f) => {
-          const isActive = selectedTier === f.key;
-          const isLocked = f.key !== 'all' && (f.key as number) > highestTier;
-          return (
-            <Pressable
-              key={String(f.key)}
-              onPress={() => {
-                if (!isLocked) {
-                  hapticLight();
-                  setSelectedTier(f.key);
-                }
-              }}
-              style={[
-                styles.filterPill,
-                isActive && styles.filterPillActive,
-                isLocked && styles.filterPillLocked,
-              ]}
-            >
-              <Text style={[styles.filterText, isActive && styles.filterTextActive, isLocked && styles.filterTextLocked]}>
-                {isLocked ? '🔒' : f.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+      {/* Tier Filter — compact horizontal pills */}
+      <View style={styles.filterSection}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterRow}
+        >
+          {TIER_FILTERS.map((f) => {
+            const isActive = selectedTier === f.key;
+            const isLocked = f.key !== 'all' && (f.key as number) > highestTier;
+            return (
+              <Pressable
+                key={String(f.key)}
+                onPress={() => {
+                  if (!isLocked) {
+                    hapticLight();
+                    setSelectedTier(f.key);
+                  }
+                }}
+                style={[
+                  styles.pill,
+                  isActive && styles.pillActive,
+                  isLocked && styles.pillLocked,
+                ]}
+              >
+                <Text style={[
+                  styles.pillText,
+                  isActive && styles.pillTextActive,
+                  isLocked && styles.pillTextLocked,
+                ]}>
+                  {isLocked ? '🔒' : f.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
 
-      {/* Category Filter */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filterRow}
-      >
-        {(['all', 'food_beverage', 'retail', 'services', 'real_estate', 'technology', 'luxury'] as const).map((cat) => {
-          const isActive = selectedCategory === cat;
-          const label = cat === 'all' ? '🌟 All' : CATEGORY_LABELS[cat];
-          return (
-            <Pressable
-              key={cat}
-              onPress={() => {
-                hapticLight();
-                setSelectedCategory(cat);
-              }}
-              style={[styles.filterPill, isActive && styles.filterPillActive]}
-            >
-              <Text style={[styles.filterText, isActive && styles.filterTextActive]}>
-                {label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+      {/* Category Filter — compact horizontal pills */}
+      <View style={styles.filterSection}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterRow}
+        >
+          {CATEGORY_FILTERS.map((f) => {
+            const isActive = selectedCategory === f.key;
+            return (
+              <Pressable
+                key={String(f.key)}
+                onPress={() => {
+                  hapticLight();
+                  setSelectedCategory(f.key);
+                }}
+                style={[styles.pill, isActive && styles.pillActive]}
+              >
+                <Text style={[styles.pillText, isActive && styles.pillTextActive]}>
+                  {f.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       {/* Business List */}
       <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
@@ -139,7 +148,7 @@ export default function ShopScreen() {
                     <Text style={[styles.tierName, { color: tierDef.color }]}>
                       {isTierLocked ? '🔒 ' : ''}{tierDef.name}
                     </Text>
-                    <Text style={styles.tierBusinesses}>
+                    <Text style={styles.tierCount}>
                       {tierBusinesses.length} businesses
                     </Text>
                   </View>
@@ -194,35 +203,38 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
   },
+  filterSection: {
+    paddingBottom: SPACING.xs,
+  },
   filterRow: {
     paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.sm,
     gap: SPACING.sm,
+    alignItems: 'center',
   },
-  filterPill: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs + 2,
+  pill: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceLight,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  filterPillActive: {
+  pillActive: {
     backgroundColor: COLORS.primary + '25',
     borderColor: COLORS.primary + '60',
   },
-  filterPillLocked: {
+  pillLocked: {
     opacity: 0.4,
   },
-  filterText: {
+  pillText: {
     color: COLORS.textMuted,
     fontSize: 12,
     fontWeight: '600',
   },
-  filterTextActive: {
+  pillTextActive: {
     color: COLORS.primary,
   },
-  filterTextLocked: {
+  pillTextLocked: {
     color: COLORS.textDim,
   },
   list: {
@@ -244,7 +256,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
-  tierBusinesses: {
+  tierCount: {
     color: COLORS.textMuted,
     fontSize: 12,
   },

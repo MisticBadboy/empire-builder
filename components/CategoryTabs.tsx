@@ -2,13 +2,11 @@ import React from 'react';
 import { ScrollView, Text, Pressable, StyleSheet, View } from 'react-native';
 import { COLORS, SPACING, RADIUS } from '../constants/theme';
 import { BusinessCategory, CATEGORY_LABELS } from '../store/businessDefs';
-import { TIERS } from '../constants/tiers';
 import { hapticLight } from '../utils/haptics';
 
 interface CategoryTabsProps {
   selected: BusinessCategory | 'all';
   onSelect: (cat: BusinessCategory | 'all') => void;
-  highestTier: number;
 }
 
 const ALL_CATEGORIES: { key: BusinessCategory | 'all'; label: string }[] = [
@@ -19,7 +17,7 @@ const ALL_CATEGORIES: { key: BusinessCategory | 'all'; label: string }[] = [
   })),
 ];
 
-export default function CategoryTabs({ selected, onSelect, highestTier }: CategoryTabsProps) {
+export default function CategoryTabs({ selected, onSelect }: CategoryTabsProps) {
   return (
     <ScrollView
       horizontal
@@ -52,10 +50,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm,
     gap: SPACING.sm,
+    alignItems: 'center',
   },
   tab: {
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs + 2,
+    paddingVertical: 6,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceLight,
     borderWidth: 1,

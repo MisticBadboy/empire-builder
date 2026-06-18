@@ -24,24 +24,8 @@ export default function BusinessCard({ business, level, cash, onPurchase }: Busi
   const tierColor = TIERS[business.tier - 1]?.color ?? COLORS.primary;
   const progress = level / business.maxLevel;
 
-  const handlePress = () => {
-    if (canAfford && !isMaxed) {
-      hapticMedium();
-      onPurchase();
-    } else {
-      hapticLight();
-    }
-  };
-
   return (
-    <Pressable
-      onPress={handlePress}
-      style={({ pressed }) => [
-        styles.card,
-        pressed && styles.cardPressed,
-        !canAfford && !isMaxed && styles.cardDisabled,
-      ]}
-    >
+    <View style={[styles.card, !canAfford && !isMaxed && styles.cardDisabled]}>
       {/* Left: Icon + Tier indicator */}
       <View style={[styles.iconContainer, { borderLeftColor: tierColor }]}>
         <Text style={styles.icon}>{business.icon}</Text>
@@ -65,21 +49,13 @@ export default function BusinessCard({ business, level, cash, onPurchase }: Busi
 
         {isOwned ? (
           <View style={styles.upgradeRow}>
-            <ProgressBar
-              progress={progress}
-              color={tierColor}
-              height={6}
-            />
+            <ProgressBar progress={progress} color={tierColor} height={5} />
             {isMaxed ? (
-              <Text style={styles.maxedText}>MAX</Text>
+              <Text style={styles.maxedText}>✅ MAXED</Text>
             ) : (
               <View style={styles.upgradeInfo}>
-                <Text style={styles.nextIncome}>
-                  → {formatIncome(nextIncome)}
-                </Text>
-                <Text style={[styles.levelProgress, { color: COLORS.textMuted }]}>
-                  {level}/{business.maxLevel}
-                </Text>
+                <Text style={styles.nextIncome}>→ {formatIncome(nextIncome)}</Text>
+                <Text style={styles.levelProgress}>{level}/{business.maxLevel}</Text>
               </View>
             )}
           </View>
@@ -90,9 +66,22 @@ export default function BusinessCard({ business, level, cash, onPurchase }: Busi
         )}
       </View>
 
-      {/* Right: Price button */}
-      <View style={[styles.priceButton, canAfford && !isMaxed && styles.priceButtonActive]}>
-        <Text style={[styles.priceLabel, !isOwned && styles.buyLabel]}>
+      {/* Right: Price button — entire area is tappable */}
+      <Pressable
+        onPress={() => {
+          if (canAfford && !isMaxed) {
+            hapticMedium();
+            onPurchase();
+          } else {
+            hapticLight();
+          }
+        }}
+        style={[
+          styles.priceButton,
+          canAfford && !isMaxed && styles.priceButtonActive,
+        ]}
+      >
+        <Text style={styles.priceIcon}>
           {isMaxed ? '✅' : isOwned ? '⬆️' : '🛒'}
         </Text>
         <Text
@@ -102,8 +91,8 @@ export default function BusinessCard({ business, level, cash, onPurchase }: Busi
         >
           {isMaxed ? 'MAX' : formatMoney(upgradeCost)}
         </Text>
-      </View>
-    </Pressable>
+      </Pressable>
+    </View>
   );
 }
 
@@ -118,16 +107,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  cardPressed: {
-    backgroundColor: COLORS.surfaceLight,
-    transform: [{ scale: 0.98 }],
-  },
   cardDisabled: {
-    opacity: 0.6,
+    opacity: 0.5,
   },
   iconContainer: {
-    width: 52,
-    height: 52,
+    width: 48,
+    height: 48,
     borderRadius: RADIUS.md,
     backgroundColor: COLORS.surfaceLight,
     justifyContent: 'center',
@@ -136,7 +121,7 @@ const styles = StyleSheet.create({
     marginRight: SPACING.md,
   },
   icon: {
-    fontSize: 24,
+    fontSize: 22,
   },
   levelBadge: {
     position: 'absolute',
@@ -191,6 +176,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   levelProgress: {
+    color: COLORS.textMuted,
     fontSize: 11,
     fontVariant: ['tabular-nums'],
   },
@@ -212,15 +198,12 @@ const styles = StyleSheet.create({
   },
   priceButtonActive: {
     backgroundColor: COLORS.primary + '20',
-    borderWidth: 1,
-    borderColor: COLORS.primary + '40',
+    borderWidth: 1.5,
+    borderColor: COLORS.primary + '60',
   },
-  priceLabel: {
-    fontSize: 16,
+  priceIcon: {
+    fontSize: 18,
     marginBottom: 2,
-  },
-  buyLabel: {
-    fontSize: 14,
   },
   priceText: {
     color: COLORS.primary,
