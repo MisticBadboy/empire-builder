@@ -17,7 +17,17 @@ export interface GameState {
   highestTier: number;
   lastTickTimestamp: number;
   totalPurchases: number;
+  // Ad boost state
+  boostMultiplier: number;       // 1 = no boost, 2 = 2x from ad
+  boostExpiresAt: number;        // timestamp when boost ends
+  lastAdWatchedAt: number;       // timestamp of last ad (for cooldown)
+  totalAdsWatched: number;       // lifetime ad count
 }
+
+const AD_COOLDOWN_MS = 30_000;     // 30 sec between ads
+const AD_BOOST_DURATION_MS = 300_000; // 5 min boost
+const AD_BOOST_MULTIPLIER = 2;
+const AD_CASH_BONUS_MULTIPLIER = 30; // 30x income per second as cash bonus
 
 export function getInitialState(): GameState {
   return {
@@ -28,66 +38,40 @@ export function getInitialState(): GameState {
     highestTier: 1,
     lastTickTimestamp: Date.now(),
     totalPurchases: 0,
+    boostMultiplier: 1,
+    boostExpiresAt: 0,
+    lastAdWatchedAt: 0,
+    totalAdsWatched: 0,
   };
 }
 
-export function getNetWorth(state: GameState): number {
-  let invested = 0;
-  for (const [id, owned] of Object.entries(state.businesses)) {
-    invested += owned.totalInvested;
+export function tickIncome(state: GameState, deltaSec: number): GameState {
+  const incomePerSec = getTotalIncomePerSec(state) * state.boostMultiplier;
+  const earned = incomePerSec * deltaSec;
+
+  // Check if boost expired
+  let boostMult = state.boostMultiplier;
+  if (boostMult > 1 && Date.now() > state.boostExpiresAt) {
+    boostMult = 1;
   }
-  return state.cash + invested;
+
+  return {
+    ...state,
+    cash: state.cash + earned,
+    totalEarned: state.totalEarned + earned,
+    boostMultiplier: boostMult,
+  };
 }
 
-export function getOwnedLevel(state: GameState, businessId: string): number {
-  return state.businesses[businessId]?.level ?? 0;
-}
-
-export function getTotalIncomePerSec(state: GameState): number {
-  let total = 0;
-  for (const [id, owned] of Object.entries(state.businesses)) {
-    if (owned.level > 0) {
-      const def = getBusinessDef(id);
-      total += getBusinessIncome(def, owned.level);
-    }
-  }
-  return total;
-}
-
-export function canAfford(state: GameState, cost: number): boolean {
-  return state.cash >= cost;
-}
-
-export function canPurchase(state: GameState, businessId: string): boolean {
+export function purchaseBusiness(state: GameState, businessId: string): GameState {
   const def = getBusinessDef(businessId);
-  const owned = state.businesses[businessId];
-  const cost = owned ? getUpgradeCost(def, owned.level) : def.baseCost;
-  return state.cash >= cost && (owned ? owned.level < def.maxLevel : true);
-}
+  const current = state.businesses[businessId] || { level: 0, totalInvested: 0 };
+  const cost = getUpgradeCost(def, current.level);
 
-export function purchaseBusiness(state: GameState, businessId: string): GameState | null {
-  const def = getBusinessDef(businessId);
-  const owned = state.businesses[businessId];
+  if (state.cash < cost) return state;
+  if (current.level >= def.maxLevel) return state;
 
-  if (!owned) {
-    // First purchase
-    if (state.cash < def.baseCost) return null;
-    return {
-      ...state,
-      cash: state.cash - def.baseCost,
-      totalEarned: state.totalEarned,
-      businesses: {
-        ...state.businesses,
-        [businessId]: { level: 1, totalInvested: def.baseCost },
-      },
-      totalPurchases: state.totalPurchases + 1,
-    };
-  }
-
-  // Upgrade
-  if (owned.level >= def.maxLevel) return null;
-  const cost = getUpgradeCost(def, owned.level);
-  if (state.cash < cost) return null;
+  const newLevel = current.level + 1;
 
   return {
     ...state,
@@ -95,37 +79,102 @@ export function purchaseBusiness(state: GameState, businessId: string): GameStat
     businesses: {
       ...state.businesses,
       [businessId]: {
-        level: owned.level + 1,
-        totalInvested: owned.totalInvested + cost,
+        level: newLevel,
+        totalInvested: current.totalInvested + cost,
       },
     },
     totalPurchases: state.totalPurchases + 1,
   };
 }
 
-export function tickIncome(state: GameState, deltaTimeSec: number): GameState {
-  const income = getTotalIncomePerSec(state);
-  if (income <= 0) return state;
+export function getNetWorth(state: GameState): number {
+  let worth = state.cash;
+  for (const [id, save] of Object.entries(state.businesses)) {
+    worth += save.totalInvested;
+    const def = BUSINESS_DEFS.find((b) => b.id === id);
+    if (def) {
+      worth += getBusinessIncome(def, save.level) * 3600; // 1 hour of income
+    }
+  }
+  return worth;
+}
 
-  const earned = income * deltaTimeSec;
+export function getTotalIncomePerSec(state: GameState): number {
+  let total = 0;
+  for (const [id, save] of Object.entries(state.businesses)) {
+    const def = BUSINESS_DEFS.find((b) => b.id === id);
+    if (def) {
+      total += getBusinessIncome(def, save.level);
+    }
+  }
+  return total;
+}
+
+export function getOwnedLevel(state: GameState, businessId: string): number {
+  return state.businesses[businessId]?.level ?? 0;
+}
+
+// Get time remaining on ad boost (in seconds)
+export function getBoostTimeRemaining(state: GameState): number {
+  if (state.boostMultiplier <= 1) return 0;
+  const remaining = state.boostExpiresAt - Date.now();
+  return remaining > 0 ? remaining / 1000 : 0;
+}
+
+// Check if ad can be watched (cooldown expired)
+export function canWatchAd(state: GameState): boolean {
+  return Date.now() - state.lastAdWatchedAt >= AD_COOLDOWN_MS;
+}
+
+// Get ad cooldown remaining (in seconds)
+export function getAdCooldown(state: GameState): number {
+  const remaining = AD_COOLDOWN_MS - (Date.now() - state.lastAdWatchedAt);
+  return remaining > 0 ? remaining / 1000 : 0;
+}
+
+// Watch a rewarded ad — activate 2x boost
+export function watchAdBoost(state: GameState): GameState {
+  if (!canWatchAd(state)) return state;
+
   return {
     ...state,
-    cash: state.cash + earned,
-    totalEarned: state.totalEarned + earned,
-    lastTickTimestamp: Date.now(),
+    boostMultiplier: AD_BOOST_MULTIPLIER,
+    boostExpiresAt: Date.now() + AD_BOOST_DURATION_MS,
+    lastAdWatchedAt: Date.now(),
+    totalAdsWatched: state.totalAdsWatched + 1,
   };
 }
 
-export function calculateOfflineEarnings(state: GameState): { state: GameState; earnings: number } {
-  const now = Date.now();
-  const elapsed = Math.min((now - state.lastTickTimestamp) / 1000, 8 * 3600); // Max 8 hours
-  const income = getTotalIncomePerSec(state);
-  const earnings = income * elapsed;
+// Watch a rewarded ad — get instant cash bonus (30x income/sec)
+export function watchAdCashBonus(state: GameState): GameState {
+  if (!canWatchAd(state)) return state;
 
-  if (earnings <= 0) return { state, earnings: 0 };
+  const income = getTotalIncomePerSec(state);
+  const bonus = income * AD_CASH_BONUS_MULTIPLIER;
 
   return {
-    state: {
+    ...state,
+    cash: state.cash + Math.max(bonus, 100), // minimum $100 bonus
+    totalEarned: state.totalEarned + Math.max(bonus, 100),
+    lastAdWatchedAt: Date.now(),
+    totalAdsWatched: state.totalAdsWatched + 1,
+  };
+}
+
+export function calculateOfflineEarnings(state: GameState): { newState: GameState; earnings: number } {
+  const now = Date.now();
+  const offlineMs = now - state.lastTickTimestamp;
+  if (offlineMs < 60_000) return { newState: state, earnings: 0 }; // < 1 min
+
+  const maxOfflineMs = 4 * 60 * 60 * 1000; // 4 hours max
+  const cappedMs = Math.min(offlineMs, maxOfflineMs);
+  const deltaSec = cappedMs / 1000;
+
+  const incomePerSec = getTotalIncomePerSec(state);
+  const earnings = incomePerSec * deltaSec * 0.5; // 50% efficiency offline
+
+  return {
+    newState: {
       ...state,
       cash: state.cash + earnings,
       totalEarned: state.totalEarned + earnings,
@@ -135,6 +184,7 @@ export function calculateOfflineEarnings(state: GameState): { state: GameState; 
   };
 }
 
+// Calculate tier from businesses owned
 export function getUnlockedTier(state: GameState): number {
   const netWorth = getNetWorth(state);
   let highest = 1;

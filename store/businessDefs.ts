@@ -6,6 +6,20 @@ export type BusinessCategory =
   | 'technology'
   | 'luxury';
 
+export interface MilestoneBonus {
+  level: number;
+  multiplier: number;
+  label: string;
+}
+
+export const MILESTONE_LEVELS: MilestoneBonus[] = [
+  { level: 10, multiplier: 2, label: '⭐ Level 10' },
+  { level: 25, multiplier: 5, label: '⭐⭐ Level 25' },
+  { level: 50, multiplier: 10, label: '🌟 Level 50' },
+  { level: 75, multiplier: 25, label: '💫 Level 75' },
+  { level: 100, multiplier: 50, label: '👑 MAX LEVEL' },
+];
+
 export interface BusinessDef {
   id: string;
   name: string;
@@ -13,7 +27,7 @@ export interface BusinessDef {
   category: BusinessCategory;
   tier: number;
   baseCost: number;
-  baseIncome: number; // per second
+  baseIncome: number; // per second at level 1
   costMultiplier: number;
   maxLevel: number;
   icon: string;
@@ -83,105 +97,105 @@ export const BUSINESS_DEFS: BusinessDef[] = [
     description: 'Suds up those rides for tips.',
     category: 'services',
     tier: 1,
-    baseCost: 8_000,
-    baseIncome: 20,
+    baseCost: 6_000,
+    baseIncome: 18,
     costMultiplier: 1.12,
     maxLevel: 100,
-    icon: '🧼',
+    icon: '🚗',
   },
   {
-    id: 'bike_repair',
-    name: 'Bike Repair Shop',
-    description: 'Fix flats, make bank.',
+    id: 'lawn_mowing',
+    name: 'Lawn Mowing Service',
+    description: 'Mow lawns, stack bills.',
     category: 'services',
     tier: 1,
-    baseCost: 15_000,
-    baseIncome: 45,
+    baseCost: 12_000,
+    baseIncome: 40,
     costMultiplier: 1.12,
     maxLevel: 100,
-    icon: '🚲',
+    icon: '🌿',
   },
   {
-    id: 'dog_walking',
-    name: 'Dog Walking Service',
-    description: 'Walk good boys, earn good money.',
-    category: 'services',
+    id: 'pizza_delivery',
+    name: 'Pizza Delivery',
+    description: 'Hot pies, hot cash.',
+    category: 'food_beverage',
     tier: 1,
     baseCost: 25_000,
-    baseIncome: 80,
+    baseIncome: 90,
     costMultiplier: 1.12,
-    maxLevel: 100,
-    icon: '🐕',
-  },
-
-  // ═══════════════════════════════════════════
-  // TIER 2 — Small Business ($50K - $1.2M)
-  // ═══════════════════════════════════════════
-  {
-    id: 'pizza_shop',
-    name: 'Pizza Shop',
-    description: 'Slice by slice, you build an empire.',
-    category: 'food_beverage',
-    tier: 2,
-    baseCost: 50_000,
-    baseIncome: 200,
-    costMultiplier: 1.11,
     maxLevel: 100,
     icon: '🍕',
   },
+
+  // ═══════════════════════════════════════════
+  // TIER 2 — Small Business ($100K - $3M)
+  // ═══════════════════════════════════════════
   {
-    id: 'clothing_store',
-    name: 'Clothing Store',
-    description: 'Fashion forward, cash flowing.',
-    category: 'retail',
+    id: 'coffee_shop',
+    name: 'Coffee Shop',
+    description: 'Bean there, done that. Premium brews.',
+    category: 'food_beverage',
     tier: 2,
-    baseCost: 120_000,
-    baseIncome: 500,
+    baseCost: 100_000,
+    baseIncome: 600,
     costMultiplier: 1.11,
     maxLevel: 100,
-    icon: '👕',
+    icon: '☕',
   },
   {
-    id: 'barber_shop',
-    name: 'Barber Shop',
-    description: 'Fresh fades, fresh funds.',
-    category: 'services',
+    id: 'clothing_boutique',
+    name: 'Clothing Boutique',
+    description: 'Fashion forward, profit upward.',
+    category: 'retail',
     tier: 2,
     baseCost: 250_000,
-    baseIncome: 1_200,
+    baseIncome: 1_500,
     costMultiplier: 1.11,
     maxLevel: 100,
-    icon: '💇',
+    icon: '👗',
   },
   {
-    id: 'convenience_store',
-    name: 'Convenience Store',
-    description: 'Open 24/7. Sleep is for the rich.',
-    category: 'retail',
+    id: 'auto_repair',
+    name: 'Auto Repair Shop',
+    description: 'Fix engines, build empires.',
+    category: 'services',
     tier: 2,
     baseCost: 500_000,
-    baseIncome: 2_800,
+    baseIncome: 3_200,
     costMultiplier: 1.11,
     maxLevel: 100,
-    icon: '🏪',
+    icon: '🔧',
   },
   {
-    id: 'flower_shop',
-    name: 'Flower Shop',
-    description: 'Roses are red, profits are green.',
-    category: 'retail',
+    id: 'laundromat',
+    name: 'Laundromat',
+    description: 'Spin to win. Clean money, literally.',
+    category: 'services',
     tier: 2,
     baseCost: 800_000,
-    baseIncome: 5_000,
+    baseIncome: 5_500,
     costMultiplier: 1.11,
     maxLevel: 100,
-    icon: '🌸',
+    icon: '🧺',
   },
   {
-    id: 'pet_store',
-    name: 'Pet Store',
-    description: 'Fur babies pay the bills.',
+    id: 'bookstore',
+    name: 'Bookstore',
+    description: 'Knowledge is power. And profit.',
     category: 'retail',
+    tier: 2,
+    baseCost: 1_200_000,
+    baseIncome: 8_000,
+    costMultiplier: 1.11,
+    maxLevel: 100,
+    icon: '📚',
+  },
+  {
+    id: 'pet_grooming',
+    name: 'Pet Grooming',
+    description: 'Fluffy clients, fat stacks.',
+    category: 'services',
     tier: 2,
     baseCost: 1_200_000,
     baseIncome: 8_000,
@@ -230,109 +244,121 @@ export const BUSINESS_DEFS: BusinessDef[] = [
     icon: '🍣',
   },
   {
-    id: 'construction_firm',
-    name: 'Construction Firm',
-    description: 'Building the future, one brick at a time.',
-    category: 'services',
+    id: 'real_estate_agency',
+    name: 'Real Estate Agency',
+    description: 'Location, location, leverage.',
+    category: 'real_estate',
     tier: 3,
     baseCost: 40_000_000,
     baseIncome: 380_000,
     costMultiplier: 1.10,
     maxLevel: 100,
-    icon: '🏗️',
+    icon: '🏠',
   },
   {
     id: 'car_dealership',
     name: 'Car Dealership',
-    description: 'Move metal, move money.',
+    description: 'Move metal, make millions.',
     category: 'retail',
     tier: 3,
-    baseCost: 75_000_000,
-    baseIncome: 750_000,
+    baseCost: 60_000_000,
+    baseIncome: 550_000,
     costMultiplier: 1.10,
     maxLevel: 100,
-    icon: '🚗',
+    icon: '🏎️',
   },
   {
-    id: 'event_center',
-    name: 'Event Center',
-    description: 'Concerts, conferences, cash.',
-    category: 'real_estate',
+    id: 'tech_startup',
+    name: 'Tech Startup',
+    description: 'Disrupt everything. Pivot often.',
+    category: 'technology',
+    tier: 3,
+    baseCost: 80_000_000,
+    baseIncome: 800_000,
+    costMultiplier: 1.10,
+    maxLevel: 100,
+    icon: '💻',
+  },
+  {
+    id: 'nightclub',
+    name: 'Nightclub',
+    description: 'Bass drops, cash pops.',
+    category: 'food_beverage',
     tier: 3,
     baseCost: 120_000_000,
     baseIncome: 1_200_000,
     costMultiplier: 1.10,
     maxLevel: 100,
-    icon: '🎭',
+    icon: '🪩',
   },
 
   // ═══════════════════════════════════════════
-  // TIER 4 — Corporate ($500M - $15B)
+  // TIER 4 — Corporate ($500M - $80B)
   // ═══════════════════════════════════════════
   {
-    id: 'office_tower',
-    name: 'Office Tower',
-    description: 'Sky-high rents, sky-high returns.',
-    category: 'real_estate',
+    id: 'manufacturing_plant',
+    name: 'Manufacturing Plant',
+    description: 'Assembly lines print money.',
+    category: 'services',
     tier: 4,
     baseCost: 500_000_000,
     baseIncome: 5_000_000,
     costMultiplier: 1.09,
     maxLevel: 100,
-    icon: '🏢',
+    icon: '🏭',
   },
   {
-    id: 'private_airport',
-    name: 'Private Airport',
-    description: 'Jet set, money set.',
-    category: 'luxury',
-    tier: 4,
-    baseCost: 1_000_000_000,
-    baseIncome: 10_000_000,
-    costMultiplier: 1.09,
-    maxLevel: 100,
-    icon: '✈️',
-  },
-  {
-    id: 'medical_center',
-    name: 'Medical Center',
-    description: 'Healthcare pays. Always.',
-    category: 'services',
+    id: 'software_company',
+    name: 'Software Company',
+    description: 'Code is the new oil.',
+    category: 'technology',
     tier: 4,
     baseCost: 2_000_000_000,
     baseIncome: 22_000_000,
     costMultiplier: 1.09,
     maxLevel: 100,
-    icon: '🏥',
+    icon: '🖥️',
   },
   {
-    id: 'factory_complex',
-    name: 'Factory Complex',
-    description: 'Industrial might, industrial money.',
-    category: 'retail',
+    id: 'hotel_chain',
+    name: 'Hotel Chain',
+    description: 'Keys to every city.',
+    category: 'real_estate',
     tier: 4,
-    baseCost: 4_000_000_000,
-    baseIncome: 45_000_000,
+    baseCost: 5_000_000_000,
+    baseIncome: 60_000_000,
     costMultiplier: 1.09,
     maxLevel: 100,
-    icon: '🏭',
+    icon: '🏛️',
   },
   {
-    id: 'telecom_network',
-    name: 'Telecom Network',
-    description: 'Connect the world, collect the bills.',
-    category: 'technology',
+    id: 'construction_company',
+    name: 'Construction Company',
+    description: 'Build the world, own the world.',
+    category: 'services',
     tier: 4,
     baseCost: 8_000_000_000,
-    baseIncome: 95_000_000,
+    baseIncome: 100_000_000,
     costMultiplier: 1.09,
     maxLevel: 100,
-    icon: '📡',
+    icon: '🏗️',
+  },
+  {
+    id: 'shipping_fleet',
+    name: 'Shipping Fleet',
+    description: 'Containers full of cash.',
+    category: 'services',
+    tier: 4,
+    baseCost: 10_000_000_000,
+    baseIncome: 140_000_000,
+    costMultiplier: 1.09,
+    maxLevel: 100,
+    icon: '🚢',
   },
   {
     id: 'shopping_mall',
     name: 'Shopping Mall',
-    description: 'Every store pays you rent.',
+    description: 'Retail kingdom. Every store pays rent.',
     category: 'real_estate',
     tier: 4,
     baseCost: 15_000_000_000,
@@ -382,122 +408,119 @@ export const BUSINESS_DEFS: BusinessDef[] = [
     icon: '🏝️',
   },
   {
-    id: 'power_grid',
-    name: 'Power Grid',
-    description: 'Energy is the ultimate currency.',
+    id: 'airline',
+    name: 'Airline',
+    description: 'Fly high, earn higher.',
     category: 'services',
+    tier: 5,
+    baseCost: 750_000_000_000,
+    baseIncome: 12_000_000_000,
+    costMultiplier: 1.08,
+    maxLevel: 100,
+    icon: '✈️',
+  },
+  {
+    id: 'hedge_fund',
+    name: 'Hedge Fund',
+    description: 'Other people\'s money, your profits.',
+    category: 'luxury',
     tier: 5,
     baseCost: 1_000_000_000_000,
     baseIncome: 18_000_000_000,
     costMultiplier: 1.08,
     maxLevel: 100,
-    icon: '⚡',
+    icon: '📈',
   },
   {
-    id: 'movie_studio',
-    name: 'Movie Studio',
-    description: 'Lights, camera, revenue.',
-    category: 'luxury',
+    id: 'pharmaceutical',
+    name: 'Pharmaceutical Empire',
+    description: 'Cure diseases, cure poverty.',
+    category: 'technology',
     tier: 5,
     baseCost: 2_000_000_000_000,
-    baseIncome: 40_000_000_000,
+    baseIncome: 30_000_000_000,
     costMultiplier: 1.08,
     maxLevel: 100,
-    icon: '🎬',
-  },
-  {
-    id: 'sports_empire',
-    name: 'Sports Empire',
-    description: 'Own every team. Win every check.',
-    category: 'luxury',
-    tier: 5,
-    baseCost: 5_000_000_000_000,
-    baseIncome: 90_000_000_000,
-    costMultiplier: 1.08,
-    maxLevel: 100,
-    icon: '🏟️',
+    icon: '💊',
   },
 
   // ═══════════════════════════════════════════
-  // TIER 6 — Tycoon ($50T - $5Q)
+  // TIER 6 — Tycoon ($10T - $1Qa)
   // ═══════════════════════════════════════════
   {
-    id: 'global_internet',
-    name: 'Global Internet',
-    description: 'The entire internet. Your internet.',
-    category: 'technology',
-    tier: 6,
-    baseCost: 50_000_000_000_000,
-    baseIncome: 500_000_000_000,
-    costMultiplier: 1.07,
-    maxLevel: 100,
-    icon: '🌐',
-  },
-  {
-    id: 'investment_bank',
-    name: 'Investment Bank',
-    description: 'Money making money making money.',
+    id: 'global_bank',
+    name: 'Global Bank',
+    description: 'The world\'s vault. Everyone deposits.',
     category: 'luxury',
     tier: 6,
-    baseCost: 100_000_000_000_000,
-    baseIncome: 1_200_000_000_000,
+    baseCost: 10_000_000_000_000,
+    baseIncome: 200_000_000_000,
     costMultiplier: 1.07,
     maxLevel: 100,
     icon: '🏦',
   },
   {
-    id: 'diamond_mine',
-    name: 'Diamond Mine',
-    description: 'Sparkle and shine, all mine.',
+    id: 'movie_studio',
+    name: 'Movie Studio',
+    description: 'Blockbusters are billion-dollar businesses.',
     category: 'luxury',
     tier: 6,
-    baseCost: 250_000_000_000_000,
-    baseIncome: 3_000_000_000_000,
+    baseCost: 50_000_000_000_000,
+    baseIncome: 1_000_000_000_000,
     costMultiplier: 1.07,
     maxLevel: 100,
-    icon: '💎',
+    icon: '🎬',
   },
   {
-    id: 'luxury_resort',
-    name: 'Luxury Resort',
-    description: 'Five stars, five commas.',
-    category: 'real_estate',
+    id: 'defense_contractor',
+    name: 'Defense Contractor',
+    description: 'Protecting nations. Profiting doubly.',
+    category: 'services',
     tier: 6,
-    baseCost: 500_000_000_000_000,
-    baseIncome: 7_000_000_000_000,
+    baseCost: 100_000_000_000_000,
+    baseIncome: 2_500_000_000_000,
     costMultiplier: 1.07,
     maxLevel: 100,
-    icon: '🏰',
+    icon: '🛡️',
   },
   {
-    id: 'orbital_station',
-    name: 'Orbital Station',
-    description: 'Business in space. The final frontier.',
+    id: 'space_agency',
+    name: 'Space Agency',
+    description: 'Mining asteroids. Infinite resources.',
     category: 'technology',
     tier: 6,
-    baseCost: 1_000_000_000_000_000,
-    baseIncome: 20_000_000_000_000,
+    baseCost: 500_000_000_000_000,
+    baseIncome: 12_000_000_000_000,
     costMultiplier: 1.07,
     maxLevel: 100,
     icon: '🛸',
   },
   {
-    id: 'planetary_corp',
-    name: 'Planetary Corporation',
-    description: 'One planet wasn\'t enough.',
+    id: 'mega_corporation',
+    name: 'Mega Corporation',
+    description: 'The final boss. Owns everything.',
     category: 'technology',
     tier: 6,
-    baseCost: 5_000_000_000_000_000,
-    baseIncome: 60_000_000_000_000,
+    baseCost: 1_000_000_000_000_000,
+    baseIncome: 30_000_000_000_000,
     costMultiplier: 1.07,
     maxLevel: 100,
-    icon: '🌍',
+    icon: '🏢',
   },
 ];
 
-// Helper: get business def by id
+// Helper: get all categories that exist in BUSINESS_DEFS
+export function getActiveCategories(): BusinessCategory[] {
+  const cats = new Set<BusinessCategory>();
+  for (const b of BUSINESS_DEFS) cats.add(b.category);
+  return CATEGORY_ORDER.filter((c) => cats.has(c));
+}
+
+// Helper: find a business by id
 export function getBusinessDef(id: string): BusinessDef {
-  return BUSINESS_DEFS.find((b) => b.id === id)!;
+  const def = BUSINESS_DEFS.find((b) => b.id === id);
+  if (!def) throw new Error(`Business not found: ${id}`);
+  return def;
 }
 
 // Helper: get businesses by tier
@@ -511,8 +534,47 @@ export function getUpgradeCost(def: BusinessDef, level: number): number {
   return Math.floor(def.baseCost * Math.pow(def.costMultiplier, level));
 }
 
+// Helper: get milestone multiplier for a given level
+export function getMilestoneMultiplier(level: number): number {
+  let mult = 1;
+  for (const m of MILESTONE_LEVELS) {
+    if (level >= m.level) mult = m.multiplier;
+  }
+  return mult;
+}
+
+// Helper: get the next milestone for a given level
+export function getNextMilestone(level: number): MilestoneBonus | null {
+  for (const m of MILESTONE_LEVELS) {
+    if (level < m.level) return m;
+  }
+  return null; // already at max
+}
+
 // Helper: calculate income per second for a business at given level
+// Uses exponential scaling: baseIncome * level^1.8 * milestoneMultiplier
 export function getBusinessIncome(def: BusinessDef, level: number): number {
   if (level === 0) return 0;
-  return def.baseIncome * (1 + level * 0.1);
+  const base = def.baseIncome;
+  const levelScale = Math.pow(level, 1.8);
+  const milestoneMult = getMilestoneMultiplier(level);
+  return base * levelScale * milestoneMult;
+}
+
+// Helper: get income for a specific level without milestone (for previewing next milestone)
+export function getBusinessIncomeRaw(def: BusinessDef, level: number): number {
+  if (level === 0) return 0;
+  return def.baseIncome * Math.pow(level, 1.8);
+}
+
+// Helper: format the income jump preview
+export function getIncomeJumpPreview(
+  def: BusinessDef,
+  currentLevel: number,
+  nextLevel: number
+): { current: number; next: number; percentIncrease: number } {
+  const current = getBusinessIncome(def, currentLevel);
+  const next = getBusinessIncome(def, nextLevel);
+  const percentIncrease = current > 0 ? ((next - current) / current) * 100 : 100;
+  return { current, next, percentIncrease };
 }

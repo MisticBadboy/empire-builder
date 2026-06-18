@@ -9,7 +9,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useGameStore } from '../../store/useGameStore';
-import { BUSINESS_DEFS, getUpgradeCost, getBusinessIncome } from '../../store/businessDefs';
+import { BUSINESS_DEFS, getUpgradeCost, getBusinessIncome, getMilestoneMultiplier, getNextMilestone, MILESTONE_LEVELS } from '../../store/businessDefs';
 import { COLORS, SPACING, RADIUS } from '../../constants/theme';
 import { TIERS } from '../../constants/tiers';
 import { formatMoney, formatIncome } from '../../utils/formatters';
@@ -64,10 +64,15 @@ export default function BusinessDetailScreen() {
   for (let i = 1; i <= 5; i++) {
     const previewLevel = level + i;
     if (previewLevel > business.maxLevel) break;
+    const milestone = MILESTONE_LEVELS.find((m) => m.level === previewLevel);
     upgradePreviews.push({
       level: previewLevel,
       cost: getUpgradeCost(business, previewLevel - 1),
       income: getBusinessIncome(business, previewLevel),
+      incomeJump: level > 0 ? getBusinessIncome(business, previewLevel) - getBusinessIncome(business, previewLevel - 1) : 0,
+      isMilestone: !!milestone,
+      milestoneMult: milestone?.multiplier,
+      milestoneLabel: milestone?.label,
     });
   }
 
