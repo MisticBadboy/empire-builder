@@ -123,6 +123,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         // Calculate offline earnings
         const { newState, earnings } = calculateOfflineEarnings(loaded);
 
+        // Recalculate tier (old saves may have stale highestTier)
+        newState.highestTier = getUnlockedTier(newState);
+
         _gameState = newState;
         set({
           cash: newState.cash,

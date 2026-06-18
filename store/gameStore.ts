@@ -55,11 +55,14 @@ export function tickIncome(state: GameState, deltaSec: number): GameState {
     boostMult = 1;
   }
 
+  const newTier = getUnlockedTier({ ...state, cash: state.cash + earned, totalEarned: state.totalEarned + earned });
+
   return {
     ...state,
     cash: state.cash + earned,
     totalEarned: state.totalEarned + earned,
     boostMultiplier: boostMult,
+    highestTier: Math.max(state.highestTier, newTier),
   };
 }
 
@@ -73,7 +76,7 @@ export function purchaseBusiness(state: GameState, businessId: string): GameStat
 
   const newLevel = current.level + 1;
 
-  return {
+  const newState = {
     ...state,
     cash: state.cash - cost,
     businesses: {
@@ -85,6 +88,8 @@ export function purchaseBusiness(state: GameState, businessId: string): GameStat
     },
     totalPurchases: state.totalPurchases + 1,
   };
+  newState.highestTier = Math.max(newState.highestTier, getUnlockedTier(newState));
+  return newState;
 }
 
 export function getNetWorth(state: GameState): number {
