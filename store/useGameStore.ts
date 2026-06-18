@@ -30,6 +30,7 @@ interface GameActions {
   getBoostTimeRemaining: () => number;
   canWatchAd: () => boolean;
   getAdCooldown: () => number;
+  getState: () => GameState;
 }
 
 type GameStore = GameState & GameActions;
@@ -97,14 +98,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
         totalAdsWatched: state.totalAdsWatched,
       };
       const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      AsyncStorage.setItem('empire_builder_save', JSON.stringify(data));
+      AsyncStorage.setItem('empire_builder_save_v2', JSON.stringify(data));
     } catch {}
   },
 
   load: () => {
     try {
       const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      AsyncStorage.getItem('empire_builder_save').then((json: string | null) => {
+      AsyncStorage.getItem('empire_builder_save_v2').then((json: string | null) => {
         if (!json) return;
         const data = JSON.parse(json);
         const initial = getInitialState();
@@ -145,7 +146,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     _gameState = initial;
     try {
       const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      AsyncStorage.removeItem('empire_builder_save');
+      AsyncStorage.removeItem('empire_builder_save_v2');
     } catch {}
     set({ ...initial });
   },
@@ -185,6 +186,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   getBoostTimeRemaining: () => getBoostTimeRemaining(get() as GameState),
   canWatchAd: () => canWatchAd(get() as GameState),
   getAdCooldown: () => getAdCooldown(get() as GameState),
+
+  // Cloud save/load
+  cloudSaveToAccount: async () => { /* handled by authService */ },
+  cloudLoadFromAccount: async () => { /* handled by authService */ },
 
   getState: () => _gameState,
 }));

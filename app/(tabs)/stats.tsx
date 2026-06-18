@@ -19,6 +19,8 @@ import { hapticLight, hapticMedium } from '../../utils/haptics';
 import { areAdsRemoved } from '../../services/adService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { isSignedIn, getAccount } from '../../services/authService';
+
 export default function StatsScreen() {
   const router = useRouter();
   const cash = useGameStore((s) => s.cash);
@@ -71,6 +73,7 @@ export default function StatsScreen() {
           onPress: async () => {
             hapticMedium();
             try {
+              await AsyncStorage.removeItem('empire_builder_save_v2');
               await AsyncStorage.removeItem('empire_builder_save');
             } catch {}
             loadGame();
@@ -127,6 +130,26 @@ export default function StatsScreen() {
             <Text style={styles.removeAdsArrow}>→</Text>
           </Pressable>
         )}
+
+        {/* Account Linking */}
+        <Pressable
+          style={styles.accountCard}
+          onPress={() => {
+            hapticLight();
+            router.push('/account');
+          }}
+        >
+          <View style={styles.removeAdsLeft}>
+            <Text style={styles.removeAdsIcon}>🔗</Text>
+            <View>
+              <Text style={styles.removeAdsTitle}>Link Account</Text>
+              <Text style={styles.removeAdsSub}>
+                {isSignedIn() ? `Signed in (${getAccount()?.provider}) — Cloud sync active` : 'Sign in with Google or Apple for cloud saves'}
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.removeAdsArrow}>→</Text>
+        </Pressable>
 
         {/* Achievements */}
         <Text style={styles.sectionTitle}>🏆 Achievements ({achievements.length}/{ACHIEVEMENT_DEFS.length})</Text>
@@ -190,6 +213,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: COLORS.primary + '10', borderRadius: RADIUS.lg,
     padding: SPACING.md, marginBottom: SPACING.md, borderWidth: 1, borderColor: COLORS.primary + '30',
+  },
+  accountCard: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: COLORS.secondary + '10', borderRadius: RADIUS.lg,
+    padding: SPACING.md, marginBottom: SPACING.md, borderWidth: 1, borderColor: COLORS.secondary + '30',
   },
   removeAdsLeft: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, flex: 1 },
   removeAdsIcon: { fontSize: 28 },
