@@ -1,30 +1,83 @@
 /**
- * Ad Service — Simulated ad system
+ * Ad Service — Real Google AdMob integration
  * 
- * This is a realistic ad simulation that can be swapped for real SDK later.
- * - Interstitial ads: shown between screen transitions (every N navigations)
- * - Rewarded ads: user watches for 2x boost or cash bonus (already in gameStore)
- * - Banner ads: bottom banner (can be removed with IAP)
- * - Pop-up ads: periodic popup offers
+ * Uses react-native-google-mobile-ads for:
+ * - Interstitial ads: shown between screen transitions
+ * - Rewarded ads: user watches for 2x boost or cash bonus
+ * - Rewarded Interstitial: optional combo
  * 
- * When the user purchases "Remove Ads" ($4.99), interstitials and banners are disabled.
+ * When the user purchases "Remove Ads" ($4.99), interstitials are disabled.
  * Rewarded ads (2x boost, cash bonus) ALWAYS remain — they're opt-in value.
  */
 
+import { 
+  AdEventType, 
+  InterstitialAd, 
+  RewardedAd,
+  RewardedAdEventType,
+  TestIds,
+  MobileAds,
+} from 'react-native-google-mobile-ads';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ADS_REMOVED_KEY = 'empire_builder_ads_removed';
 
+// ─── Ad Unit IDs ───────────────────────────────────────────
+// Real IDs from Google AdMob dashboard
+const INTERSTITIAL_UNIT_ID = 'ca-app-pub-6751661713322837/7488915266';
+const REWARDED_UNIT_ID = 'ca-app-pub-6751661713322837/4289816522';
+
+// Set to true during development to use test ads instead
+const USE_TEST_ADS = false;
+
+const interstitialId = USE_TEST_ADS ? TestIds.INTERSTITIAL : INTERSTITIAL_UNIT_ID;
+const rewardedId = USE_TEST_ADS ? TestIds.REWARDED : REWARDED_UNIT_ID;
+
+// ─── Config ────────────────────────────────────────────────
 // How many screen navigations between interstitials
 const INTERSTITIAL_INTERVAL = 5;
 
 // Popup ad interval (in seconds since app open)
 const POPUP_INTERVAL_SEC = 120; // every 2 minutes
 
-// Ad types that can appear
+// ─── Types ─────────────────────────────────────────────────
 export type AdType = 'interstitial' | 'rewarded' | 'banner' | 'popup';
 
-// Fake ad content for simulated ads
+// ─── Ad Instances ──────────────────────────────────────────
+const interstitial = InterstitialAd.createForAdRequest(interstitialId, {
+  requestNonPersonalizedAdsOnly: false,
+  keywords: ['gaming', 'idle', 'tycoon', 'empire', 'business'],
+});
+
+const rewarded = RewardedAd.createForAdRequest(rewardedId, {
+  requestNonPersonalizedAdsOnly: false,
+  keywords: ['gaming', 'idle', 'tycoon', 'empire', 'business'],
+});
+
+// ─── Remove Ads Offer Content ──────────────────────────────
+export const REMOVE_ADS_OFFER = {
+  title: '🚫 Remove All Ads',
+  subtitle: 'Enjoy Empire Builder ad-free!',
+  features: [
+    'No popup ads between screens',
+    'No banner ads',
+    'No interstitial interruptions',
+    'Keep your 2x Boost & Cash Bonus!',
+  ],
+  price: '$4.99',
+  priceNote: 'One-time purchase',
+};
+
+// ─── State ─────────────────────────────────────────────────
+let _navigationCount = 0;
+let _adsRemoved = false;
+let _lastPopupTime = 0;
+let _listeners: ((type: AdType) => void)[] = [];
+let _interstitialLoaded = false;
+let _rewardedLoaded = false;
+let _initialized = false;
+
+// ─── Fake ad data (kept for PopupAd visuals) ───────────────
 export const FAKE_ADS = [
   {
     id: 'promo_gem_rush',
@@ -68,28 +121,10 @@ export const FAKE_ADS = [
   },
 ];
 
-// Remove Ads upsell content
-export const REMOVE_ADS_OFFER = {
-  title: '🚫 Remove All Ads',
-  subtitle: 'Enjoy Empire Builder ad-free!',
-  features: [
-    'No popup ads between screens',
-    'No banner ads',
-    'No interstitial interruptions',
-    'Keep your 2x Boost & Cash Bonus!',
-  ],
-  price: '$4.99',
-  priceNote: 'One-time purchase',
-};
-
-// State
-let _navigationCount = 0;
-let _adsRemoved = false;
-let _lastPopupTime = 0;
-let _listeners: ((type: AdType) => void)[] = [];
-
-// Initialize
+// ─── Initialization ────────────────────────────────────────
 export async function initAdService(): Promise<void> {
+  if (_initialized) return;
+
   try {
     const val = await AsyncStorage.getItem(ADS_REMOVED_KEY);
     _adsRemoved = val === 'true';
@@ -97,14 +132,127 @@ export async function initAdService(): Promise<void> {
     _adsRemoved = false;
   }
   _lastPopupTime = Date.now();
+
+  // Initialize the Google Mobile Ads SDK
+  try {
+    await MobileAds().initialize();
+    _initialized = true;
+    console.log('[AdMob] SDK initialized successfully');
+  } catch (err) {
+    console.warn('[AdMob] SDK init failed:', err);
+    _initialized = false;
+    return;
+  }
+
+  // Pre-load the first interstitial
+  loadInterstitial();
+
+  // Set up rewarded ad listeners
+  setupRewardedListeners();
 }
 
-// Check if ads are removed
+// ─── Interstitial Ads ──────────────────────────────────────
+function loadInterstitial() {
+  if (_adsRemoved) return;
+
+  const unsubscribeLoaded = interstitial.addAdEventListener(AdEventType.LOADED, () => {
+    _interstitialLoaded = true;
+    console.log('[AdMob] Interstitial loaded');
+  });
+
+  const unsubscribeClosed = interstitial.addAdEventListener(AdEventType.CLOSED, () => {
+    _interstitialLoaded = false;
+    // Pre-load next interstitial
+    loadInterstitial();
+  });
+
+  const unsubscribeError = interstitial.addAdEventListener(AdEventType.ERROR, (err) => {
+    _interstitialLoaded = false;
+    console.warn('[AdMob] Interstitial error:', err);
+    // Retry after delay
+    setTimeout(loadInterstitial, 30000);
+  });
+
+  interstitial.load();
+}
+
+export async function showInterstitial(): Promise<boolean> {
+  if (_adsRemoved) return false;
+  if (!_interstitialLoaded) {
+    console.log('[AdMob] Interstitial not ready');
+    return false;
+  }
+
+  try {
+    await interstitial.show();
+    fireAdEvent('interstitial');
+    return true;
+  } catch (err) {
+    console.warn('[AdMob] Interstitial show failed:', err);
+    return false;
+  }
+}
+
+// ─── Rewarded Ads ──────────────────────────────────────────
+function setupRewardedListeners() {
+  const unsubscribeLoaded = rewarded.addAdEventListener(RewardedAdEventType.LOADED, () => {
+    _rewardedLoaded = true;
+    console.log('[AdMob] Rewarded ad loaded');
+  });
+
+  const unsubscribeEarned = rewarded.addAdEventListener(RewardedAdEventType.EARNED_REWARD, (reward) => {
+    console.log('[AdMob] Rewarded earned:', reward);
+    fireAdEvent('rewarded');
+  });
+
+  const unsubscribeClosed = rewarded.addAdEventListener(AdEventType.CLOSED, () => {
+    _rewardedLoaded = false;
+    // Pre-load next rewarded
+    loadRewarded();
+  });
+
+  const unsubscribeError = rewarded.addAdEventListener(AdEventType.ERROR, (err) => {
+    _rewardedLoaded = false;
+    console.warn('[AdMob] Rewarded error:', err);
+    setTimeout(loadRewarded, 30000);
+  });
+
+  loadRewarded();
+}
+
+function loadRewarded() {
+  rewarded.load();
+}
+
+/**
+ * Show a rewarded ad. Returns true if the reward was earned.
+ * Used for 2x boost and cash bonus.
+ */
+export async function showRewardedAd(): Promise<boolean> {
+  if (!_rewardedLoaded) {
+    console.log('[AdMob] Rewarded ad not ready');
+    return false;
+  }
+
+  try {
+    await rewarded.show();
+    // Reward is delivered via the EARNED_REWARD listener above
+    return true;
+  } catch (err) {
+    console.warn('[AdMob] Rewarded show failed:', err);
+    return false;
+  }
+}
+
+export function isRewardedReady(): boolean {
+  return _rewardedLoaded;
+}
+
+// ─── Core State ────────────────────────────────────────────
 export function areAdsRemoved(): boolean {
   return _adsRemoved;
 }
 
-// Mark ads as removed (after IAP)
 export async function removeAds(): Promise<void> {
   _adsRemoved = true;
   try {
@@ -112,7 +260,6 @@ export async function removeAds(): Promise<void> {
   } catch {}
 }
 
-// Restore purchase check
 export async function restorePurchases(): Promise<boolean> {
   try {
     const val = await AsyncStorage.getItem(ADS_REMOVED_KEY);
@@ -123,7 +270,7 @@ export async function restorePurchases(): Promise<boolean> {
   }
 }
 
-// Called every time user navigates between screens
+// ─── Navigation Events ─────────────────────────────────────
 export function onNavigation(): AdType | null {
   _navigationCount++;
 
@@ -131,10 +278,13 @@ export function onNavigation(): AdType | null {
 
   // Interstitial every N navigations
   if (_navigationCount % INTERSTITIAL_INTERVAL === 0) {
-    return 'interstitial';
+    if (_interstitialLoaded) {
+      showInterstitial();
+      return 'interstitial';
+    }
   }
 
-  // Popup check
+  // Popup check (visual only — not a real ad)
   const now = Date.now();
   if (now - _lastPopupTime >= POPUP_INTERVAL_SEC * 1000) {
     _lastPopupTime = now;
@@ -144,12 +294,12 @@ export function onNavigation(): AdType | null {
   return null;
 }
 
-// Get a random fake ad
+// ─── Fake Ad Data (for popup visuals) ──────────────────────
 export function getRandomAd() {
   return FAKE_ADS[Math.floor(Math.random() * FAKE_ADS.length)];
 }
 
-// Subscribe to ad events (for UI to react)
+// ─── Event System ──────────────────────────────────────────
 export function onAdEvent(listener: (type: AdType) => void): () => void {
   _listeners.push(listener);
   return () => {
@@ -157,12 +307,10 @@ export function onAdEvent(listener: (type: AdType) => void): () => void {
   };
 }
 
-// Fire ad event
 export function fireAdEvent(type: AdType) {
   _listeners.forEach((l) => l(type));
 }
 
-// Should show banner (always true unless ads removed)
 export function shouldShowBanner(): boolean {
   return !_adsRemoved;
 }

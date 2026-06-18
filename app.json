@@ -18,7 +18,8 @@
       "adaptiveIcon": {
         "backgroundColor": "#0D1117"
       },
-      "package": "com.empirebuilder.tycoon"
+      "package": "com.empirebuilder.tycoon",
+      "googleMobileAdsAppId": "ca-app-pub-6751661713322837~6564626077"
     },
     "web": {
       "bundler": "metro",
@@ -27,7 +28,16 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-asset"
+      "expo-asset",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "android_app_id": "ca-app-pub-6751661713322837~6564626077",
+          "ios_app_id": "",
+          "user_tracking_usage_description": "This identifier will be used to deliver personalized ads to you.",
+          "sk_ad_network_items": []
+        }
+      ]
     ],
     "scheme": "empire-builder"
   }

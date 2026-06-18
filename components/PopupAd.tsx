@@ -1,8 +1,9 @@
 /**
  * Popup Ad — Small popup that appears periodically
  * Offers a "bonus" or promotes something. Dismissible.
+ * When user taps "Get Boost" → shows a real rewarded ad.
  */
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,64 +13,108 @@ import {
   Animated,
 } from 'react-native';
 import { COLORS, SPACING, RADIUS } from '../constants/theme';
-import { areAdsRemoved, REMOVE_ADS_OFFER } from '../services/adService';
+import { areAdsRemoved, REMOVE_ADS_OFFER, showRewardedAd, isRewardedReady } from '../services/adService';
 
 interface PopupAdProps {
   visible: boolean;
   onClose: () => void;
   onRemoveAds?: () => void;
+  onRewarded?: (type: 'boost' | 'cash') => void;
 }
 
 const POPUP_MESSAGES = [
-  { icon: '🎁', title: 'Daily Bonus!', subtitle: 'Watch an ad for 2x income boost for 5 minutes!', cta: 'Get Boost' },
-  { icon: '💰', title: 'Cash Rush!', subtitle: 'Need cash? Watch a quick ad for a massive bonus!', cta: 'Earn Cash' },
-  { icon: '⭐', title: 'Pro Tip!', subtitle: 'Upgrade milestone levels for massive income multipliers!', cta: 'Got it!' },
-  { icon: '🏆', title: 'Keep Going!', subtitle: 'You\'re growing your empire. Want to grow faster?', cta: 'Show Me' },
-  { icon: '📈', title: 'Market Surge!', subtitle: 'Income rates are high! Activate a boost now!', cta: 'Boost!' },
+  { icon: '🎁', title: 'Daily Bonus!', subtitle: 'Watch a quick ad for a 2x income boost!', cta: 'Get Boost', rewardType: 'boost' as const },
+  { icon: '💰', title: 'Cash Rush!', subtitle: 'Need cash? Watch a short ad for a big bonus!', cta: 'Earn Cash', rewardType: 'cash' as const },
+  { icon: '⭐', title: 'Pro Tip!', subtitle: 'Upgrade milestone levels for massive income multipliers!', cta: 'Got it!', rewardType: null },
+  { icon: '🏆', title: 'Keep Going!', subtitle: "You're growing your empire. Want to grow faster?", cta: 'Show Me', rewardType: null },
+  { icon: '📈', title: 'Market Surge!', subtitle: 'Income rates are high! Watch an ad to boost!', cta: 'Boost!', rewardType: 'boost' as const },
 ];
 
-export default function PopupAd({ visible, onClose, onRemoveAds }: PopupAdProps) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  const [msg] = useState(() => POPUP_MESSAGES[Math.floor(Math.random() * POPUP_MESSAGES.length)]);
+export default function PopupAd({ visible, onClose, onRemoveAds, onRewarded }: PopupAdProps) {
+  const [popup, setPopup] = useState(() => POPUP_MESSAGES[Math.floor(Math.random() * POPUP_MESSAGES.length)]);
+  const [loadingReward, setLoadingReward] = useState(false);
+  const fadeAnim = useState(() => new Animated.Value(0))[0];
+  const slideAnim = useState(() => new Animated.Value(50))[0];
   const isRemoved = areAdsRemoved();
 
   useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
-        Animated.spring(slideAnim, { toValue: 0, friction: 8, useNativeDriver: true }),
-      ]).start();
-    } else {
-      fadeAnim.setValue(0);
-      slideAnim.setValue(50);
-    }
+    if (!visible) return;
+    setPopup(POPUP_MESSAGES[Math.floor(Math.random() * POPUP_MESSAGES.length)]);
+    setLoadingReward(false);
+
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 250, useNativeDriver: true }),
+      Animated.spring(slideAnim, { toValue: 0, friction: 8, useNativeDriver: true }),
+    ]).start();
   }, [visible]);
 
-  if (isRemoved) return null;
+  const handleClose = () => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 50, duration: 200, useNativeDriver: true }),
+    ]).start(() => onClose());
+  };
+
+  const handleCta = async () => {
+    if (!popup.rewardType) {
+      handleClose();
+      return;
+    }
+
+    // Try to show real rewarded ad
+    if (isRewardedReady()) {
+      setLoadingReward(true);
+      const shown = await showRewardedAd();
+      setLoadingReward(false);
+      if (shown) {
+        onRewarded?.(popup.rewardType);
+      }
+    } else {
+      // Fallback: just give the reward for UX
+      onRewarded?.(popup.rewardType);
+    }
+    handleClose();
+  };
+
+  if (isRemoved || !visible) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose}>
+    <Modal transparent animationType="fade" visible={visible} onRequestClose={handleClose}>
+      <Pressable style={styles.overlay} onPress={handleClose}>
         <Animated.View
-          style={[styles.popup, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
+          style={[
+            styles.popup,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
         >
-          <Pressable onPress={(e) => e.stopPropagation()}>
-            <Text style={styles.popupIcon}>{msg.icon}</Text>
-            <Text style={styles.popupTitle}>{msg.title}</Text>
-            <Text style={styles.popupSubtitle}>{msg.subtitle}</Text>
-            <View style={styles.buttonRow}>
-              <Pressable onPress={onClose} style={styles.dismissBtn}>
-                <Text style={styles.dismissText}>Later</Text>
-              </Pressable>
-              <Pressable onPress={onClose} style={styles.ctaBtn}>
-                <Text style={styles.ctaText}>{msg.cta}</Text>
-              </Pressable>
-            </View>
-            <Pressable onPress={onRemoveAds} style={styles.removeLink}>
-              <Text style={styles.removeText}>
-                {REMOVE_ADS_OFFER.price} — No more popups →
+          <Pressable style={styles.popupContent} onPress={(e) => e.stopPropagation()}>
+            {/* Close Button */}
+            <Pressable style={styles.closeBtn} onPress={handleClose}>
+              <Text style={styles.closeText}>✕</Text>
+            </Pressable>
+
+            {/* Content */}
+            <Text style={styles.icon}>{popup.icon}</Text>
+            <Text style={styles.title}>{popup.title}</Text>
+            <Text style={styles.subtitle}>{popup.subtitle}</Text>
+
+            {/* CTA Button */}
+            <Pressable
+              style={[styles.ctaButton, loadingReward && styles.ctaDisabled]}
+              onPress={handleCta}
+              disabled={loadingReward}
+            >
+              <Text style={styles.ctaText}>
+                {loadingReward ? 'Loading...' : popup.cta}
               </Text>
+            </Pressable>
+
+            {/* Remove Ads Link */}
+            <Pressable style={styles.removeLink} onPress={onRemoveAds}>
+              <Text style={styles.removeText}>🚫 {REMOVE_ADS_OFFER.title}</Text>
             </Pressable>
           </Pressable>
         </Animated.View>
@@ -81,63 +126,66 @@ export default function PopupAd({ visible, onClose, onRemoveAds }: PopupAdProps)
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: SPACING.xl,
   },
   popup: {
+    width: 300,
+  },
+  popupContent: {
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.xxl,
-    width: '100%',
-    maxWidth: 320,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.lg,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: COLORS.primary + '40',
+    borderColor: COLORS.border,
   },
-  popupIcon: {
-    fontSize: 48,
-    marginBottom: SPACING.md,
-    textAlign: 'center',
-  },
-  popupTitle: {
-    color: COLORS.text,
-    fontSize: 18,
-    fontWeight: '800',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  popupSubtitle: {
-    color: COLORS.textMuted,
-    fontSize: 13,
-    textAlign: 'center',
-    marginBottom: SPACING.lg,
-    lineHeight: 18,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: SPACING.sm,
-    marginBottom: SPACING.md,
-  },
-  dismissBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.surfaceLight,
+  closeBtn: {
+    position: 'absolute',
+    top: SPACING.sm,
+    right: SPACING.sm,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.background,
+    justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 10,
   },
-  dismissText: {
-    color: COLORS.textMuted,
-    fontSize: 13,
+  closeText: {
+    color: COLORS.textDim,
+    fontSize: 14,
     fontWeight: '600',
   },
-  ctaBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: RADIUS.full,
+  icon: {
+    fontSize: 40,
+    marginBottom: SPACING.sm,
+  },
+  title: {
+    color: COLORS.text,
+    fontSize: 17,
+    fontWeight: '800',
+    marginBottom: SPACING.xs,
+  },
+  subtitle: {
+    color: COLORS.textDim,
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: SPACING.md,
+    lineHeight: 16,
+  },
+  ctaButton: {
     backgroundColor: COLORS.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+    marginBottom: SPACING.sm,
+    minWidth: 140,
     alignItems: 'center',
+  },
+  ctaDisabled: {
+    opacity: 0.6,
   },
   ctaText: {
     color: '#000',

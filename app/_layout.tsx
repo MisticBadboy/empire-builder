@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useGameStore } from '../store/useGameStore';
-import { initAdService } from '../services/adService';
+import { initAdService, onAdEvent } from '../services/adService';
 import InterstitialAd from '../components/InterstitialAd';
 import PopupAd from '../components/PopupAd';
 
@@ -11,11 +11,21 @@ export default function RootLayout() {
   const load = useGameStore((s) => s.load);
   const [showInterstitial, setShowInterstitial] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
-  const navCount = useRef(0);
 
   useEffect(() => {
     load();
     initAdService();
+
+    // Listen for ad events from the ad service
+    const unsub = onAdEvent((type) => {
+      if (type === 'interstitial') {
+        setShowInterstitial(true);
+      } else if (type === 'popup') {
+        setShowPopup(true);
+      }
+    });
+
+    return unsub;
   }, []);
 
   return (
@@ -51,16 +61,19 @@ export default function RootLayout() {
       <InterstitialAd
         visible={showInterstitial}
         onClose={() => setShowInterstitial(false)}
-        onRemoveAds={() => {
-          setShowInterstitial(false);
-          // Navigate to remove ads screen handled by adService
-        }}
+        onRemoveAds={() => setShowInterstitial(false)}
       />
       <PopupAd
         visible={showPopup}
         onClose={() => setShowPopup(false)}
-        onRemoveAds={() => {
-          setShowPopup(false);
+        onRemoveAds={() => setShowPopup(false)}
+        onRewarded={(type) => {
+          const store = useGameStore.getState();
+          if (type === 'boost') {
+            store.watchAdBoost();
+          } else if (type === 'cash') {
+            store.watchAdCashBonus();
+          }
         }}
       />
     </SafeAreaProvider>
