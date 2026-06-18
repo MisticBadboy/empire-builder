@@ -12,9 +12,10 @@ interface BusinessCardProps {
   level: number;
   cash: number;
   onPurchase: () => void;
+  onPress: () => void;
 }
 
-export default function BusinessCard({ business, level, cash, onPurchase }: BusinessCardProps) {
+export default function BusinessCard({ business, level, cash, onPurchase, onPress }: BusinessCardProps) {
   const isOwned = level > 0;
   const isMaxed = level >= business.maxLevel;
   const upgradeCost = isOwned ? getUpgradeCost(business, level) : business.baseCost;
@@ -26,18 +27,24 @@ export default function BusinessCard({ business, level, cash, onPurchase }: Busi
 
   return (
     <View style={[styles.card, !canAfford && !isMaxed && styles.cardDisabled]}>
-      {/* Left: Icon + Tier indicator */}
-      <View style={[styles.iconContainer, { borderLeftColor: tierColor }]}>
+      {/* Left: Icon + Tier indicator — tappable to navigate to detail */}
+      <Pressable
+        onPress={() => { hapticLight(); onPress(); }}
+        style={[styles.iconContainer, { borderLeftColor: tierColor }]}
+      >
         <Text style={styles.icon}>{business.icon}</Text>
         {isOwned && (
           <View style={[styles.levelBadge, { backgroundColor: tierColor }]}>
             <Text style={styles.levelText}>Lv{level}</Text>
           </View>
         )}
-      </View>
+      </Pressable>
 
-      {/* Center: Info */}
-      <View style={styles.info}>
+      {/* Center: Info — tappable to navigate to detail */}
+      <Pressable
+        onPress={() => { hapticLight(); onPress(); }}
+        style={styles.info}
+      >
         <View style={styles.nameRow}>
           <Text style={styles.name} numberOfLines={1}>{business.name}</Text>
           {isOwned && (
@@ -64,9 +71,9 @@ export default function BusinessCard({ business, level, cash, onPurchase }: Busi
             {business.description}
           </Text>
         )}
-      </View>
+      </Pressable>
 
-      {/* Right: Price button — entire area is tappable */}
+      {/* Right: Price button — quick purchase from list */}
       <Pressable
         onPress={() => {
           if (canAfford && !isMaxed) {

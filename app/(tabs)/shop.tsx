@@ -7,13 +7,14 @@ import {
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useGameStore } from '../store/useGameStore';
-import { BUSINESS_DEFS, BusinessCategory, CATEGORY_LABELS } from '../store/businessDefs';
-import { COLORS, SPACING, RADIUS } from '../constants/theme';
-import { TIERS } from '../constants/tiers';
-import { formatMoney } from '../utils/formatters';
-import { hapticLight, hapticMedium } from '../utils/haptics';
-import BusinessCard from '../components/BusinessCard';
+import { useRouter } from 'expo-router';
+import { useGameStore } from '../../store/useGameStore';
+import { BUSINESS_DEFS, BusinessCategory, CATEGORY_LABELS } from '../../store/businessDefs';
+import { COLORS, SPACING, RADIUS } from '../../constants/theme';
+import { TIERS } from '../../constants/tiers';
+import { formatMoney } from '../../utils/formatters';
+import { hapticLight, hapticMedium } from '../../utils/haptics';
+import BusinessCard from '../../components/BusinessCard';
 
 const TIER_FILTERS: { key: number | 'all'; label: string }[] = [
   { key: 'all', label: '🌟 All' },
@@ -29,6 +30,7 @@ const CATEGORY_FILTERS: { key: BusinessCategory | 'all'; label: string }[] = [
 ];
 
 export default function ShopScreen() {
+  const router = useRouter();
   const cash = useGameStore((s) => s.cash);
   const businesses = useGameStore((s) => s.businesses);
   const highestTier = useGameStore((s) => s.highestTier);
@@ -159,6 +161,7 @@ export default function ShopScreen() {
                       level={businesses[biz.id]?.level ?? 0}
                       cash={isTierLocked ? 0 : cash}
                       onPurchase={() => handlePurchase(biz.id)}
+                      onPress={() => router.push(`/business/${biz.id}`)}
                     />
                   ))}
                 </View>

@@ -8,12 +8,12 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useGameStore } from '../store/useGameStore';
-import { BUSINESS_DEFS } from '../store/businessDefs';
-import { ACHIEVEMENT_DEFS } from '../store/achievements';
-import { COLORS, SPACING, RADIUS } from '../constants/theme';
-import { TIERS } from '../constants/tiers';
-import { formatMoney, formatIncome } from '../utils/formatters';
+import { useGameStore } from '../../store/useGameStore';
+import { BUSINESS_DEFS } from '../../store/businessDefs';
+import { ACHIEVEMENT_DEFS } from '../../store/achievements';
+import { COLORS, SPACING, RADIUS } from '../../constants/theme';
+import { TIERS } from '../../constants/tiers';
+import { formatMoney, formatIncome } from '../../utils/formatters';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function StatsScreen() {

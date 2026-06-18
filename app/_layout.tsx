@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react';
-import { Tabs } from 'expo-router';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useGameStore } from '../store/useGameStore';
 import { COLORS } from '../constants/theme';
-import { Text, StyleSheet } from 'react-native';
 
 export default function RootLayout() {
   const load = useGameStore((s) => s.load);
@@ -16,53 +15,22 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      <Tabs
+      <Stack
         screenOptions={{
           headerShown: false,
-          tabBarStyle: {
-            backgroundColor: COLORS.surface,
-            borderTopColor: COLORS.border,
-            borderTopWidth: 1,
-            height: 70,
-            paddingTop: 8,
-            paddingBottom: 12,
-          },
-          tabBarActiveTintColor: COLORS.primary,
-          tabBarInactiveTintColor: COLORS.textMuted,
-          tabBarLabelStyle: {
-            fontSize: 11,
-            fontWeight: '600',
-          },
+          contentStyle: { backgroundColor: COLORS.background },
+          animation: 'slide_from_right',
         }}
       >
-        <Tabs.Screen
-          name="index"
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="business/[id]"
           options={{
-            title: 'Empire',
-            tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>💰</Text>,
+            headerShown: false,
+            presentation: 'card',
           }}
         />
-        <Tabs.Screen
-          name="shop"
-          options={{
-            title: 'Shop',
-            tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>🏪</Text>,
-          }}
-        />
-        <Tabs.Screen
-          name="stats"
-          options={{
-            title: 'Stats',
-            tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>📊</Text>,
-          }}
-        />
-      </Tabs>
+      </Stack>
     </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  tabIcon: {
-    fontSize: 20,
-  },
-});

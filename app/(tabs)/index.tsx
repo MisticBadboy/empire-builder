@@ -7,14 +7,14 @@ import {
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useGameStore } from '../store/useGameStore';
-import { useGameLoop } from '../utils/useGameLoop';
-import { BUSINESS_DEFS, getUpgradeCost, getBusinessIncome } from '../store/businessDefs';
-import { COLORS, SPACING, RADIUS } from '../constants/theme';
-import { TIERS } from '../constants/tiers';
-import { formatMoney, formatIncome } from '../utils/formatters';
-import { hapticMedium } from '../utils/haptics';
-import ProgressBar from '../components/ProgressBar';
+import { useGameStore } from '../../store/useGameStore';
+import { useGameLoop } from '../../utils/useGameLoop';
+import { BUSINESS_DEFS, getUpgradeCost, getBusinessIncome } from '../../store/businessDefs';
+import { COLORS, SPACING, RADIUS } from '../../constants/theme';
+import { TIERS } from '../../constants/tiers';
+import { formatMoney, formatIncome } from '../../utils/formatters';
+import { hapticMedium } from '../../utils/haptics';
+import ProgressBar from '../../components/ProgressBar';
 import { Link } from 'expo-router';
 
 export default function DashboardScreen() {
