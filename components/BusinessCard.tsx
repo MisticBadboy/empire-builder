@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { COLORS, SPACING, RADIUS } from '../constants/theme';
 import { BusinessDef, getUpgradeCost, getBusinessIncome } from '../store/businessDefs';
 import { formatMoney, formatIncome } from '../utils/formatters';
 import { hapticLight, hapticMedium } from '../utils/haptics';
 import ProgressBar from './ProgressBar';
+import FloatingMoney from './FloatingMoney';
 import { TIERS } from '../constants/tiers';
 
 interface BusinessCardProps {
@@ -24,6 +25,16 @@ export default function BusinessCard({ business, level, cash, onPurchase, onPres
   const canAfford = cash >= upgradeCost;
   const tierColor = TIERS[business.tier - 1]?.color ?? COLORS.primary;
   const progress = level / business.maxLevel;
+  const [floatTrigger, setFloatTrigger] = useState(0);
+  const [floatAmount, setFloatAmount] = useState(0);
+
+  const handlePurchase = () => {
+    if (!canAfford || isMaxed) return;
+    hapticMedium();
+    setFloatAmount(nextIncome);
+    setFloatTrigger((t) => t + 1);
+    onPurchase();
+  };
 
   return (
     <View style={[styles.card, !canAfford && !isMaxed && styles.cardDisabled]}>
@@ -74,31 +85,27 @@ export default function BusinessCard({ business, level, cash, onPurchase, onPres
       </Pressable>
 
       {/* Right: Price button — quick purchase from list */}
-      <Pressable
-        onPress={() => {
-          if (canAfford && !isMaxed) {
-            hapticMedium();
-            onPurchase();
-          } else {
-            hapticLight();
-          }
-        }}
-        style={[
-          styles.priceButton,
-          canAfford && !isMaxed && styles.priceButtonActive,
-        ]}
-      >
-        <Text style={styles.priceIcon}>
-          {isMaxed ? '✅' : isOwned ? '⬆️' : '🛒'}
-        </Text>
-        <Text
-          style={[styles.priceText, !canAfford && !isMaxed && styles.priceTextDisabled]}
-          numberOfLines={1}
-          adjustsFontSizeToFit
+      <View style={styles.priceWrapper}>
+        <FloatingMoney trigger={floatTrigger} amount={floatAmount} />
+        <Pressable
+          onPress={handlePurchase}
+          style={[
+            styles.priceButton,
+            canAfford && !isMaxed && styles.priceButtonActive,
+          ]}
         >
-          {isMaxed ? 'MAX' : formatMoney(upgradeCost)}
-        </Text>
-      </Pressable>
+          <Text style={styles.priceIcon}>
+            {isMaxed ? '✅' : isOwned ? '⬆️' : '🛒'}
+          </Text>
+          <Text
+            style={[styles.priceText, !canAfford && !isMaxed && styles.priceTextDisabled]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {isMaxed ? 'MAX' : formatMoney(upgradeCost)}
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -193,6 +200,9 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textAlign: 'right',
     marginTop: 2,
+  },
+  priceWrapper: {
+    position: 'relative',
   },
   priceButton: {
     alignItems: 'center',

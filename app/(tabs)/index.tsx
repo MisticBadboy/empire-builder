@@ -113,7 +113,7 @@ export default function DashboardScreen() {
           <Text style={styles.cashLabel}>CASH</Text>
           <MoneyCounter amount={cash} size={32} showLabel="" />
           <Text style={styles.incomePerSec}>
-            {formatIncome(incomePerSec * boostMultiplier)}/s
+            {formatIncome(incomePerSec * boostMultiplier)}
             {boostMultiplier > 1 && (
               <Text style={{ color: COLORS.success }}> ⚡</Text>
             )}
@@ -207,7 +207,7 @@ export default function DashboardScreen() {
                 {bestDef.icon} {bestDef.name}
               </Text>
               <Text style={styles.upgradeNewIncome}>
-                → {formatIncome(bestNewIncome)}/s
+                → {formatIncome(bestNewIncome)}
               </Text>
             </View>
             <View style={styles.upgradeRight}>
@@ -234,7 +234,7 @@ export default function DashboardScreen() {
                   <Text style={styles.earnerIcon}>{biz.def.icon}</Text>
                   <View style={styles.earnerInfo}>
                     <Text style={styles.earnerName}>{biz.def.name}</Text>
-                    <Text style={styles.earnerIncome}>{formatIncome(income)}/s</Text>
+                    <Text style={styles.earnerIncome}>{formatIncome(income)}</Text>
                     {milestone && (
                       <Text style={styles.earnerMilestone}>
                         Next: Lv{milestone.level} → x{milestone.multiplier}
