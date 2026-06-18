@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Empire Builder — Ad Video</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: #0D1117;
+    color: #F0F6FC;
+    font-family: 'Inter', -apple-system, sans-serif;
+    overflow: hidden;
+    width: 1080px;
+    height: 1920px;
+    position: relative;
+  }
+
+  /* ===== PHASE 1: HOOK (0-2s) ===== */
+  .phase1 {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: fadeIn 0.3s ease 0.2s forwards;
+  }
+  .phase1 .big-text {
+    font-size: 86px;
+    font-weight: 900;
+    text-align: center;
+    line-height: 1.1;
+    opacity: 0;
+    animation: slideUp 0.6s ease 0.3s forwards;
+  }
+  .phase1 .big-text .gold { color: #FFD700; }
+  .phase1 .sub-text {
+    font-size: 38px;
+    color: #8B949E;
+    margin-top: 30px;
+    opacity: 0;
+    animation: slideUp 0.6s ease 0.8s forwards;
+  }
+  .phase1 .money-rain {
+    position: absolute;
+    top: -100px;
+    font-size: 80px;
+    opacity: 0;
+    animation: rainMoney 2s ease-in forwards;
+    animation-delay: 1s;
+  }
+
+  /* ===== PHASE 2: GAMEPLAY (2-5s) ===== */
+  .phase2 {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: fadeIn 0.3s ease 2.5s forwards;
+    padding: 60px;
+  }
+
+  .phone-frame {
+    width: 640px;
+    height: 1200px;
+    background: #161B22;
+    border-radius: 50px;
+    border: 4px solid #30363D;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 80px rgba(255, 215, 0, 0.15);
+    opacity: 0;
+    animation: popIn 0.5s ease 2.8s forwards;
+  }
+
+  .phone-statusbar {
+    height: 50px;
+    background: #0D1117;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .phone-screen {
+    padding: 20px;
+    background: #0D1117;
+    height: calc(100% - 50px);
+  }
+
+  .cash-display {
+    text-align: center;
+    padding: 30px 0;
+  }
+  .cash-label {
+    font-size: 16px;
+    color: #8B949E;
+    letter-spacing: 4px;
+    font-weight: 600;
+  }
+  .cash-amount {
+    font-size: 56px;
+    font-weight: 900;
+    color: #FFD700;
+    opacity: 0;
+    animation: countUp 1.5s ease 3.2s forwards;
+    font-variant-numeric: tabular-nums;
+  }
+  .cash-rate {
+    font-size: 22px;
+    color: #3FB950;
+    font-weight: 700;
+  }
+
+  .networth-box {
+    background: #161B22;
+    border: 2px solid #FFD70040;
+    border-radius: 16px;
+    padding: 20px;
+    margin: 15px 0;
+    opacity: 0;
+    animation: slideUp 0.5s ease 3.5s forwards;
+  }
+  .nw-label {
+    font-size: 14px;
+    color: #8B949E;
+    letter-spacing: 3px;
+  }
+  .nw-value {
+    font-size: 36px;
+    font-weight: 900;
+    color: #F0F6FC;
+  }
+  .nw-tier {
+    font-size: 20px;
+    font-weight: 700;
+    color: #FF6B6B;
+  }
+  .nw-bar {
+    height: 6px;
+    background: #21262D;
+    border-radius: 3px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+  .nw-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #FFD700, #FF6B6B);
+    border-radius: 3px;
+    width: 0%;
+    animation: barFill 1s ease 4s forwards;
+  }
+
+  .biz-card {
+    display: flex;
+    align-items: center;
+    background: #161B22;
+    border: 1px solid #30363D;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 10px 0;
+    opacity: 0;
+    animation: slideInLeft 0.4s ease forwards;
+  }
+  .biz-card:nth-of-type(1) { animation-delay: 3.8s; }
+  .biz-card:nth-of-type(2) { animation-delay: 4.1s; }
+  .biz-card:nth-of-type(3) { animation-delay: 4.4s; }
+  .biz-icon { font-size: 40px; margin-right: 16px; }
+  .biz-name { font-size: 20px; font-weight: 700; }
+  .biz-income { font-size: 16px; color: #3FB950; font-weight: 600; }
+  .biz-level { 
+    margin-left: auto; 
+    background: #FFD70020;
+    color: #FFD700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  /* ===== PHASE 3: FEATURES (5-7.5s) ===== */
+  .phase3 {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: fadeIn 0.3s ease 5.5s forwards;
+    padding: 80px;
+  }
+
+  .feature-item {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    margin: 28px 0;
+    opacity: 0;
+    animation: slideUp 0.5s ease forwards;
+  }
+  .feature-item:nth-child(1) { animation-delay: 5.8s; }
+  .feature-item:nth-child(2) { animation-delay: 6.1s; }
+  .feature-item:nth-child(3) { animation-delay: 6.4s; }
+  .feature-item:nth-child(4) { animation-delay: 6.7s; }
+
+  .feature-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 44px;
+    flex-shrink: 0;
+  }
+  .fi-1 { background: #FFD70020; }
+  .fi-2 { background: #3FB95020; }
+  .fi-3 { background: #58A6FF20; }
+  .fi-4 { background: #A855F720; }
+
+  .feature-text h3 {
+    font-size: 32px;
+    font-weight: 800;
+  }
+  .feature-text p {
+    font-size: 22px;
+    color: #8B949E;
+    margin-top: 4px;
+  }
+
+  /* ===== PHASE 4: CTA (7.5-10s) ===== */
+  .phase4 {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: fadeIn 0.3s ease 7.8s forwards;
+  }
+
+  .cta-title {
+    font-size: 72px;
+    font-weight: 900;
+    text-align: center;
+    line-height: 1.1;
+    opacity: 0;
+    animation: scaleIn 0.5s ease 8s forwards;
+  }
+  .cta-title .gold { color: #FFD700; }
+
+  .cta-button {
+    margin-top: 50px;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #000;
+    font-size: 40px;
+    font-weight: 900;
+    padding: 28px 80px;
+    border-radius: 60px;
+    opacity: 0;
+    animation: popIn 0.4s ease 8.5s forwards, pulse 1.5s ease-in 8.9s infinite;
+    box-shadow: 0 0 60px rgba(255, 215, 0, 0.4);
+  }
+
+  .cta-sub {
+    font-size: 28px;
+    color: #8B949E;
+    margin-top: 24px;
+    opacity: 0;
+    animation: fadeIn 0.5s ease 9s forwards;
+  }
+
+  .floating-cash {
+    position: absolute;
+    font-size: 60px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .fc1 { left: 100px; top: 300px; animation: floatUp 3s ease 8s infinite; }
+  .fc2 { right: 120px; top: 400px; animation: floatUp 3s ease 8.5s infinite; }
+  .fc3 { left: 200px; top: 600px; animation: floatUp 3s ease 9s infinite; }
+  .fc4 { right: 180px; top: 250px; animation: floatUp 3s ease 8.2s infinite; }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeIn { to { opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideInLeft { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes scaleIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+  @keyframes barFill { to { width: 72%; } }
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  @keyframes rainMoney {
+    0% { transform: translateY(-100px) rotate(0deg); opacity: 0; }
+    20% { opacity: 1; }
+    100% { transform: translateY(2000px) rotate(720deg); opacity: 0; }
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(0); opacity: 0; }
+    10% { opacity: 0.6; }
+    90% { opacity: 0.6; }
+    100% { transform: translateY(-300px); opacity: 0; }
+  }
+
+  /* Noise/grain overlay for cinematic feel */
+  body::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+
+<!-- PHASE 1: HOOK -->
+<div class="phase1">
+  <div class="big-text">
+    BUILD YOUR<br><span class="gold">EMPIRE</span>
+  </div>
+  <div class="sub-text">From zero to tycoon</div>
+  <div class="money-rain">💰</div>
+</div>
+
+<!-- PHASE 2: GAMEPLAY -->
+<div class="phase2">
+  <div class="phone-frame">
+    <div class="phone-statusbar">
+      <span>2:25</span>
+      <span>⚡ 🔋</span>
+    </div>
+    <div class="phone-screen">
+      <div class="cash-display">
+        <div class="cash-label">CASH</div>
+        <div class="cash-amount">$1.02M</div>
+        <div class="cash-rate">↑ $535/s ⚡</div>
+      </div>
+
+      <div class="networth-box">
+        <div class="nw-label">NET WORTH</div>
+        <div class="nw-value">$1.2M</div>
+        <div class="nw-tier">🔥 Mid-Range</div>
+        <div class="nw-bar">
+          <div class="nw-bar-fill"></div>
+        </div>
+      </div>
+
+      <div class="biz-card">
+        <div class="biz-icon">🌭</div>
+        <div>
+          <div class="biz-name">Hot Dog Stand</div>
+          <div class="biz-income">$231/s</div>
+        </div>
+        <div class="biz-level">Lv14</div>
+      </div>
+      <div class="biz-card">
+        <div class="biz-icon">🍋</div>
+        <div>
+          <div class="biz-name">Lemonade Cart</div>
+          <div class="biz-income">$86/s</div>
+        </div>
+        <div class="biz-level">Lv8</div>
+      </div>
+      <div class="biz-card">
+        <div class="biz-icon">🏢</div>
+        <div>
+          <div class="biz-name">Tech Startup</div>
+          <div class="biz-income">$2.1K/s</div>
+        </div>
+        <div class="biz-level">Lv5</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PHASE 3: FEATURES -->
+<div class="phase3">
+  <div class="feature-item">
+    <div class="feature-icon fi-1">📈</div>
+    <div class="feature-text">
+      <h3>30+ Businesses</h3>
+      <p>Hot dogs to mega corps</p>
+    </div>
+  </div>
+  <div class="feature-item">
+    <div class="feature-icon fi-2">⬆️</div>
+    <div class="feature-text">
+      <h3>Milestone Multipliers</h3>
+      <p>10x, 25x, 50x income boosts</p>
+    </div>
+  </div>
+  <div class="feature-item">
+    <div class="feature-icon fi-3">🏆</div>
+    <div class="feature-text">
+      <h3>6 Tiers to Climb</h3>
+      <p>Street Hustler → Tycoon</p>
+    </div>
+  </div>
+  <div class="feature-item">
+    <div class="feature-icon fi-4">⚡</div>
+    <div class="feature-text">
+      <h3>Watch Ads for 2x Boost</h3>
+      <p>Optional — earn faster</p>
+    </div>
+  </div>
+</div>
+
+<!-- PHASE 4: CTA -->
+<div class="phase4">
+  <div class="cta-title">
+    YOUR EMPIRE<br><span class="gold">AWAITS</span>
+  </div>
+  <div class="cta-button">DOWNLOAD FREE</div>
+  <div class="cta-sub">Available on Android</div>
+  
+  <div class="floating-cash fc1">💵</div>
+  <div class="floating-cash fc2">💰</div>
+  <div class="floating-cash fc3">🪙</div>
+  <div class="floating-cash fc4">💎</div>
+</div>
+
+</body>
+</html>

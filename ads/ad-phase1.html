@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0D1117;
+    color: #F0F6FC;
+    font-family: 'Inter', -apple-system, sans-serif;
+    overflow: hidden;
+    width: 1080px;
+    height: 1920px;
+    position: relative;
+  }
+
+  /* ── PHASE 1: HOOK ── */
+  .phase1 {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .hook-title {
+    font-size: 96px; font-weight: 900;
+    text-align: center; line-height: 1.05;
+  }
+  .hook-title .gold { color: #FFD700; text-shadow: 0 0 60px #FFD70060; }
+  .hook-sub {
+    font-size: 40px; color: #8B949E;
+    margin-top: 30px; font-weight: 600;
+  }
+  .hook-money {
+    font-size: 120px; margin-top: 50px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  /* ── PHASE 2: GAMEPLAY ── */
+  .phase2 {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px;
+  }
+  .phone {
+    width: 660px; background: #161B22;
+    border-radius: 44px; border: 3px solid #30363D;
+    overflow: hidden;
+    box-shadow: 0 0 100px rgba(255,215,0,0.12);
+  }
+  .phone-top {
+    height: 48px; background: #0D1117;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; font-size: 20px; font-weight: 600; color: #8B949E;
+  }
+  .phone-body { padding: 24px; }
+
+  .cash-header { text-align: center; padding: 20px 0 24px; }
+  .cash-lbl { font-size: 14px; color: #8B949E; letter-spacing: 5px; font-weight: 700; }
+  .cash-amt { font-size: 64px; font-weight: 900; color: #FFD700; margin: 4px 0; }
+  .cash-rate { font-size: 24px; color: #3FB950; font-weight: 700; }
+
+  .nw-box {
+    background: #0D1117; border: 2px solid #FFD70030;
+    border-radius: 16px; padding: 18px; margin-bottom: 18px;
+  }
+  .nw-lbl { font-size: 12px; color: #8B949E; letter-spacing: 3px; font-weight: 600; }
+  .nw-val { font-size: 32px; font-weight: 900; margin: 2px 0; }
+  .nw-tier { font-size: 18px; font-weight: 700; color: #FF6B6B; }
+  .nw-bar { height: 6px; background: #21262D; border-radius: 3px; margin-top: 10px; }
+  .nw-fill { height: 100%; width: 72%; background: linear-gradient(90deg, #FFD700, #FF6B6B); border-radius: 3px; }
+
+  .biz {
+    display: flex; align-items: center; background: #0D1117;
+    border: 1px solid #30363D; border-radius: 14px;
+    padding: 14px 16px; margin: 10px 0;
+  }
+  .biz-emoji { font-size: 38px; margin-right: 14px; }
+  .biz-name { font-size: 20px; font-weight: 700; }
+  .biz-inc { font-size: 15px; color: #3FB950; font-weight: 600; }
+  .biz-lv {
+    margin-left: auto; background: #FFD70018;
+    color: #FFD700; padding: 5px 14px;
+    border-radius: 20px; font-size: 15px; font-weight: 800;
+  }
+  .biz-buy {
+    margin-left: 8px; background: #FFD700;
+    color: #000; padding: 5px 14px;
+    border-radius: 20px; font-size: 14px; font-weight: 800;
+  }
+
+  /* ── PHASE 3: FEATURES ── */
+  .phase3 {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 80px 60px;
+  }
+  .feat-title {
+    font-size: 52px; font-weight: 900; margin-bottom: 50px;
+    text-align: center;
+  }
+  .feat-title .gold { color: #FFD700; }
+  .feat-row {
+    display: flex; align-items: center; gap: 24px;
+    margin: 22px 0; width: 100%;
+  }
+  .feat-icon {
+    width: 80px; height: 80px; border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 42px; flex-shrink: 0;
+  }
+  .fi-gold { background: #FFD70018; }
+  .fi-green { background: #3FB95018; }
+  .fi-blue { background: #58A6FF18; }
+  .fi-purple { background: #A855F718; }
+  .feat-h3 { font-size: 32px; font-weight: 800; }
+  .feat-p { font-size: 22px; color: #8B949E; margin-top: 2px; }
+
+  /* ── PHASE 4: CTA ── */
+  .phase4 {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .cta-title {
+    font-size: 80px; font-weight: 900;
+    text-align: center; line-height: 1.05;
+  }
+  .cta-title .gold { color: #FFD700; text-shadow: 0 0 80px #FFD70050; }
+  .cta-btn {
+    margin-top: 50px;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #000; font-size: 42px; font-weight: 900;
+    padding: 28px 90px; border-radius: 60px;
+    box-shadow: 0 0 80px rgba(255,215,0,0.35);
+  }
+  .cta-sub {
+    font-size: 28px; color: #8B949E;
+    margin-top: 24px; font-weight: 600;
+  }
+  .cta-emojis {
+    font-size: 70px; margin-top: 60px;
+    letter-spacing: 20px;
+  }
+
+  @keyframes pulse { 0%,100%{ transform: scale(1); } 50%{ transform: scale(1.1); } }
+
+  /* Cinematic grain */
+  body::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, #0D111780 100%);
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== PHASE 1: HOOK ===== -->
+<div class="phase1" id="phase1">
+  <div class="hook-title">BUILD YOUR<br><span class="gold">EMPIRE</span></div>
+  <div class="hook-sub">From $0 to Tycoon</div>
+  <div class="hook-money">💰</div>
+</div>
+
+<!-- ===== PHASE 2: GAMEPLAY ===== -->
+<div class="phase2" id="phase2" style="display:none">
+  <div class="phone">
+    <div class="phone-top"><span>2:25</span><span>⚡ 📶 🔋</span></div>
+    <div class="phone-body">
+      <div class="cash-header">
+        <div class="cash-lbl">CASH</div>
+        <div class="cash-amt">$1.02M</div>
+        <div class="cash-rate">↑ $535/s ⚡</div>
+      </div>
+      <div class="nw-box">
+        <div class="nw-lbl">NET WORTH</div>
+        <div class="nw-val">$1.2M</div>
+        <div class="nw-tier">🔥 Mid-Range — Tier 3/6</div>
+        <div class="nw-bar"><div class="nw-fill"></div></div>
+      </div>
+      <div class="biz"><div class="biz-emoji">🌭</div><div><div class="biz-name">Hot Dog Stand</div><div class="biz-inc">$231/s</div></div><div class="biz-lv">Lv14</div></div>
+      <div class="biz"><div class="biz-emoji">🍋</div><div><div class="biz-name">Lemonade Cart</div><div class="biz-inc">$86/s</div></div><div class="biz-lv">Lv8</div></div>
+      <div class="biz"><div class="biz-emoji">🏢</div><div><div class="biz-name">Tech Startup</div><div class="biz-inc">$2.1K/s</div></div><div class="biz-buy">$4.8K</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PHASE 3: FEATURES ===== -->
+<div class="phase3" id="phase3" style="display:none">
+  <div class="feat-title">WHY YOU'LL <span class="gold">LOVE IT</span></div>
+  <div class="feat-row">
+    <div class="feat-icon fi-gold">📈</div>
+    <div><div class="feat-h3">30+ Businesses</div><div class="feat-p">Hot dogs to mega corps</div></div>
+  </div>
+  <div class="feat-row">
+    <div class="feat-icon fi-green">⬆️</div>
+    <div><div class="feat-h3">Milestone Multipliers</div><div class="feat-p">10x, 25x, 50x income boosts</div></div>
+  </div>
+  <div class="feat-row">
+    <div class="feat-icon fi-blue">🏆</div>
+    <div><div class="feat-h3">6 Tiers to Climb</div><div class="feat-p">Street Hustler → Tycoon</div></div>
+  </div>
+  <div class="feat-row">
+    <div class="feat-icon fi-purple">⚡</div>
+    <div><div class="feat-h3">Earn While You Sleep</div><div class="feat-p">Offline income + ad boosts</div></div>
+  </div>
+</div>
+
+<!-- ===== PHASE 4: CTA ===== -->
+<div class="phase4" id="phase4" style="display:none">
+  <div class="cta-title">YOUR EMPIRE<br><span class="gold">AWAITS</span></div>
+  <div class="cta-btn">DOWNLOAD FREE</div>
+  <div class="cta-sub">Available on Android</div>
+  <div class="cta-emojis">💰 🏗️ 👑</div>
+</div>
+
+</body>
+</html>
