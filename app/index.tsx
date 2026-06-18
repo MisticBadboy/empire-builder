@@ -4,9 +4,9 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   Pressable,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGameStore } from '../store/useGameStore';
 import { useGameLoop } from '../utils/useGameLoop';
 import { BUSINESS_DEFS, getUpgradeCost, getBusinessIncome } from '../store/businessDefs';

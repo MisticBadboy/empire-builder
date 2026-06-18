@@ -4,10 +4,10 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   Pressable,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGameStore } from '../store/useGameStore';
 import { BUSINESS_DEFS } from '../store/businessDefs';
 import { ACHIEVEMENT_DEFS } from '../store/achievements';

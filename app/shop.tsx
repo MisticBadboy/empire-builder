@@ -4,9 +4,9 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   Pressable,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useGameStore } from '../store/useGameStore';
 import { BUSINESS_DEFS, BusinessCategory, CATEGORY_LABELS } from '../store/businessDefs';
 import { COLORS, SPACING, RADIUS } from '../constants/theme';

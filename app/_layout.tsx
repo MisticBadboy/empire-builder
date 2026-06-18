@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { Tabs } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useGameStore } from '../store/useGameStore';
 import { COLORS } from '../constants/theme';
-import { View, Text, StyleSheet } from 'react-native';
+import { Text, StyleSheet } from 'react-native';
 
 export default function RootLayout() {
   const load = useGameStore((s) => s.load);
@@ -13,7 +14,7 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <>
+    <SafeAreaProvider>
       <StatusBar style="light" />
       <Tabs
         screenOptions={{
@@ -56,7 +57,7 @@ export default function RootLayout() {
           }}
         />
       </Tabs>
-    </>
+    </SafeAreaProvider>
   );
 }
 
