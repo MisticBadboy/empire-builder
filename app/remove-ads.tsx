@@ -1,10 +1,9 @@
 /**
  * Remove Ads Screen — IAP purchase screen
  * Shows what you get for removing ads with a big CTA button.
- * In Expo Go, this simulates the purchase.
- * When bundled with expo-in-app-purchases, swap in real IAP.
+ * Uses RevenueCat for real purchases on Google Play / App Store.
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,13 +11,20 @@ import {
   StyleSheet,
   Pressable,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { useGameStore } from '../store/useGameStore';
 import { COLORS, SPACING, RADIUS } from '../constants/theme';
 import { hapticLight, hapticMedium } from '../utils/haptics';
 import { REMOVE_ADS_OFFER, removeAds, areAdsRemoved } from '../services/adService';
+import {
+  initPurchases,
+  purchaseRemoveAds,
+  restoreRemoveAds,
+  hasPurchasedRemoveAds,
+  getRemoveAdsPrice,
+} from '../services/purchaseService';
 
 const FEATURES = [
   { icon: '🚫', text: 'No popup ads between screens' },
@@ -32,30 +38,57 @@ export default function RemoveAdsScreen() {
   const insets = useSafeAreaInsets();
   const [purchased, setPurchased] = useState(areAdsRemoved());
   const [purchasing, setPurchasing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [price, setPrice] = useState('$4.99');
+
+  useEffect(() => {
+    (async () => {
+      await initPurchases();
+      const has = await hasPurchasedRemoveAds();
+      if (has) {
+        await removeAds(); // Sync local state
+        setPurchased(true);
+      }
+      setPrice(getRemoveAdsPrice());
+      setLoading(false);
+    })();
+  }, []);
 
   const handlePurchase = async () => {
     if (purchasing) return;
     setPurchasing(true);
     hapticMedium();
 
-    // Simulate purchase delay (swap with real IAP later)
-    await new Promise((r) => setTimeout(r, 1500));
+    const result = await purchaseRemoveAds();
 
-    await removeAds();
-    setPurchased(true);
-    setPurchasing(false);
-    hapticMedium();
-    Alert.alert('✅ Purchase Complete!', 'All ads have been removed. Enjoy Empire Builder!', [
-      { text: 'Awesome!', onPress: () => router.back() },
-    ]);
-  };
-
-    const handleRestore = async () => {
-      hapticLight();
+    if (result.success) {
       await removeAds();
       setPurchased(true);
-      Alert.alert('Restored!', 'Your previous purchase has been restored.');
-    };
+      hapticMedium();
+      Alert.alert('✅ Purchase Complete!', 'All ads have been removed. Enjoy Empire Builder!', [
+        { text: 'Awesome!', onPress: () => router.back() },
+      ]);
+    } else if (result.error !== 'cancelled') {
+      Alert.alert('Purchase Failed', result.error || 'Something went wrong. Please try again.');
+    }
+
+    setPurchasing(false);
+  };
+
+  const handleRestore = async () => {
+    hapticLight();
+    setLoading(true);
+    const restored = await restoreRemoveAds();
+    setLoading(false);
+
+    if (restored) {
+      await removeAds();
+      setPurchased(true);
+      Alert.alert('✅ Restored!', 'Your previous purchase has been restored.');
+    } else {
+      Alert.alert('No Purchase Found', 'We couldn\'t find a previous Remove Ads purchase on this account.');
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -107,20 +140,37 @@ export default function RemoveAdsScreen() {
           <Pressable
             style={[styles.purchaseBtn, purchasing && styles.purchaseBtnLoading]}
             onPress={handlePurchase}
-            disabled={purchasing}
+            disabled={purchasing || loading}
           >
-            <Text style={styles.purchasePrice}>{REMOVE_ADS_OFFER.price}</Text>
-            <Text style={styles.purchaseLabel}>
-              {purchasing ? 'Processing...' : 'Remove All Ads — Forever'}
-            </Text>
-            <Text style={styles.purchaseNote}>{REMOVE_ADS_OFFER.priceNote}</Text>
+            {purchasing ? (
+              <>
+                <ActivityIndicator color="#000" size="small" />
+                <Text style={styles.purchaseLabel}>Processing...</Text>
+              </>
+            ) : loading ? (
+              <>
+                <ActivityIndicator color="#000" size="small" />
+                <Text style={styles.purchaseLabel}>Loading...</Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.purchasePrice}>{price}</Text>
+                <Text style={styles.purchaseLabel}>Remove All Ads — Forever</Text>
+                <Text style={styles.purchaseNote}>{REMOVE_ADS_OFFER.priceNote}</Text>
+              </>
+            )}
           </Pressable>
         )}
 
         {/* Restore */}
-        <Pressable onPress={handleRestore} style={styles.restoreBtn}>
+        <Pressable onPress={handleRestore} style={styles.restoreBtn} disabled={loading}>
           <Text style={styles.restoreText}>Restore Purchase</Text>
         </Pressable>
+
+        {/* Legal */}
+        <Text style={styles.legal}>
+          Payment will be charged to your Google Play account at confirmation of purchase. This is a one-time purchase with no recurring charges.
+        </Text>
       </ScrollView>
     </View>
   );
@@ -170,4 +220,8 @@ const styles = StyleSheet.create({
   purchasedSub: { color: COLORS.textMuted, fontSize: 13, marginTop: 4 },
   restoreBtn: { alignItems: 'center', padding: SPACING.md },
   restoreText: { color: COLORS.textMuted, fontSize: 13, textDecorationLine: 'underline' },
+  legal: {
+    color: COLORS.textDim, fontSize: 10, textAlign: 'center',
+    marginTop: SPACING.sm, lineHeight: 14, paddingHorizontal: SPACING.md,
+  },
 });

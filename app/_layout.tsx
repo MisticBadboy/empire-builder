@@ -3,7 +3,8 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useGameStore } from '../store/useGameStore';
-import { initAdService, onAdEvent } from '../services/adService';
+import { initAdService, onAdEvent, removeAds as markAdsRemoved } from '../services/adService';
+import { initPurchases, hasPurchasedRemoveAds } from '../services/purchaseService';
 import InterstitialAd from '../components/InterstitialAd';
 import PopupAd from '../components/PopupAd';
 
@@ -15,6 +16,11 @@ export default function RootLayout() {
   useEffect(() => {
     load();
     initAdService();
+    // Init RevenueCat and sync entitlement status
+    initPurchases().then(async () => {
+      const hasPurchased = await hasPurchasedRemoveAds();
+      if (hasPurchased) await markAdsRemoved();
+    });
 
     // Listen for ad events from the ad service
     const unsub = onAdEvent((type) => {
